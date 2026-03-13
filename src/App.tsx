@@ -495,10 +495,10 @@ export default function App() {
                     >
                       {/* Order Bubble */}
                       {/* Order Bubble */}
-  <div className="order-bubble absolute bottom-[20%] mb-2 scale-95">
-  {/* 移除了 mb-2 和 translate-y-[160%]，因为绝对定位下这些边距/位移无意义 */}
-  <div className="flex flex-col items-center gap-1">
-    <div className="relative w-12 h-12 flex items-center justify-center">
+                       <div className="order-bubble absolute bottom-[500px] mb-2 scale-95">
+                    {/* 移除了 mb-2 和 translate-y-[160%]，因为绝对定位下这些边距/位移无意义 */}
+                      <div className="flex flex-col items-center gap-1">
+                      <div className="relative w-12 h-12 flex items-center justify-center">
                             {/* 此处的图片来源于 RECIPES 对象，必须在 types.ts 里面也用 import 处理 */}
                             <img 
                               src={RECIPES[customer.order!.recipeId].image} 
