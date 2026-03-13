@@ -1,10 +1,3 @@
-我已经为你把这个完整版的 App.tsx 进行了 Vite import 语法的全面改造。
-主要做了以下修改：
- * 移除了 getImgUrl 函数，因为在 Vite 中不需要也不建议用纯字符串拼接来处理 src 下的图片。
- * 在文件顶部添加了所有静态图片的 import（包含了背景、站台、盘子等）。
- * 将 JSX 中所有写死的字符串路径（如 src="./assets/..."）替换为导入的变量。
- * 将所有 onError 备用图片也替换成了 import 进来的 plateImage 变量，彻底杜绝 404 问题。
-修改后的完整 App.tsx 代码：
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
