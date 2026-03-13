@@ -39,7 +39,7 @@ import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
 // 根据你第一张截图，盘子在 backgrounds 文件夹下
 import plateImage from './assets/backgrounds/plate.png'; 
-import stationFryerImage from './assets/machines/station_grill.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
+import stationFryerImage from './assets/machines/station_fryer.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
 import stationGrillImage from './assets/machines/station_grill.png'; // 假设 grill 在 machines 文件夹，如果不是请调整
 import stationSauceImage from './assets/machines/station_sauce.png';
 
@@ -75,7 +75,7 @@ export default function App() {
     setStations([
       { id: 'grill-1', type: 'STOVE', content: null, isCooking: false },
       { id: 'fryer-1', type: 'STOVE', content: null, isCooking: false },
-        { id: 'prep-1', type: 'PREP', content: null, isCooking: false },
+      { id: 'prep-1', type: 'PREP', content: null, isCooking: false },
       { id: 'plate-1', type: 'PLATE', content: [], isCooking: false },
     ]);
     setHeldItem(null);
@@ -477,8 +477,8 @@ export default function App() {
       {/* Main Game Area */}
       <main className="h-[calc(100vh-56px)] relative px-2 pt-2 pb-3 flex flex-col gap-2 z-0">
 
-        {/* Customer Area */}
-        <div className="h-[30%] min-h-[190px] flex justify-between px-2 items-end">
+        {/* Customer Area - 绝对定位在底部1/2位置 */}
+        <div className="absolute left-0 right-0 bottom-1/2 flex justify-between px-2 items-end h-[220px] z-30">
           {[0, 1, 2].map(slot => {
             const customer = customers.find(c => c.slotIndex === slot);
             return (
@@ -493,12 +493,10 @@ export default function App() {
                       className="flex flex-col items-center gap-2 cursor-pointer"
                       onClick={() => serveCustomer(slot)}
                     >
-                      {/* Order Bubble */}
-                      {/* Order Bubble */}
-                       <div className="order-bubble absolute top-[-50%] mb-2 scale-95">
-                    {/* 移除了 mb-2 和 translate-y-[160%]，因为绝对定位下这些边距/位移无意义 */}
-                      <div className="flex flex-col items-center gap-1">
-                      <div className="relative w-12 h-12 flex items-center justify-center">
+                      {/* Order Bubble - 绝对定位在底部3/4位置 */}
+                      <div className="order-bubble absolute bottom-3/4 left-1/2 -translate-x-1/2 scale-95 z-40">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="relative w-12 h-12 flex items-center justify-center">
                             {/* 此处的图片来源于 RECIPES 对象，必须在 types.ts 里面也用 import 处理 */}
                             <img 
                               src={RECIPES[customer.order!.recipeId].image} 
@@ -517,7 +515,7 @@ export default function App() {
                         </div>
                       </div>
                       {/* Customer Avatar */}
-                      <div className="w-[210px] h-[210px] relative flex items-end justify-center overflow-visible translate-y-[120%]">
+                      <div className="w-[210px] h-[210px] relative flex items-end justify-center overflow-visible">
                         {/* 来源于 CUSTOMER_IMAGES 对象，需在 types.ts 导入 */}
                         <img 
                           src={customer.image} 
@@ -534,7 +532,9 @@ export default function App() {
             );
           })}
         </div>
-        <div className="absolute left-0 right-0 bottom-[22%] z-20 flex justify-center pointer-events-none translate-y-[220px]">
+
+        {/* Table (Counter Wood) - 绝对定位在底部2/5位置 */}
+        <div className="absolute left-0 right-0 bottom-2/5 flex justify-center pointer-events-none z-20">
           {/* 使用引入的 counterWoodImage */}
           <img 
             src={counterWoodImage} 
@@ -548,8 +548,8 @@ export default function App() {
         {/* Counter Area */}
         <div className="h-[70%] bg-transparent rounded-3xl border-0 shadow-none px-1 py-1 flex flex-col gap-2">
 
-          {/* Top Counter: Stations */}
-          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[550px] relative z-30">
+          {/* Top Counter: Stations - 绝对定位在底部1/4位置 */}
+          <div className="grid grid-cols-4 gap-1 px-0.5 absolute left-0 right-0 bottom-1/4 z-10">
             {stations.map(station => (
               <div 
                 key={station.id}
