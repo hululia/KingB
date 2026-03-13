@@ -39,7 +39,7 @@ import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
 // 根据你第一张截图，盘子在 backgrounds 文件夹下
 import plateImage from './assets/backgrounds/plate.png'; 
-import stationFryerImage from './assets/machines/station_fryer.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
+import stationFryerImage from './assets/machines/station_grill.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
 import stationGrillImage from './assets/machines/station_grill.png'; // 假设 grill 在 machines 文件夹，如果不是请调整
 import stationSauceImage from './assets/machines/station_sauce.png';
 
@@ -495,7 +495,7 @@ export default function App() {
                     >
                       {/* Order Bubble */}
                       {/* Order Bubble */}
-                       <div className="order-bubble absolute bottom-[500px] mb-2 scale-95">
+                       <div className="order-bubble absolute bottom-[100px] mb-2 scale-95">
                     {/* 移除了 mb-2 和 translate-y-[160%]，因为绝对定位下这些边距/位移无意义 */}
                       <div className="flex flex-col items-center gap-1">
                       <div className="relative w-12 h-12 flex items-center justify-center">
