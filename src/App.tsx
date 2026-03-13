@@ -39,7 +39,7 @@ import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
 // 根据你第一张截图，盘子在 backgrounds 文件夹下
 import plateImage from './assets/backgrounds/plate.png'; 
-import stationFryerImage from './assets/machines/station_fryer.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
+import stationFryerImage from './assets/machines/station_grill.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
 import stationGrillImage from './assets/machines/station_grill.png'; // 假设 grill 在 machines 文件夹，如果不是请调整
 import stationSauceImage from './assets/machines/station_sauce.png';
 
@@ -494,7 +494,7 @@ export default function App() {
                       onClick={() => serveCustomer(slot)}
                     >
                       {/* Order Bubble */}
-                      <div className="order-bubble mb-2 translate-y-[500px] scale-95">
+                      <div className="order-bubble mb-2 translate-y-[40%] scale-95">
                         <div className="flex flex-col items-center gap-1">
                           <div className="relative w-12 h-12 flex items-center justify-center">
                             {/* 此处的图片来源于 RECIPES 对象，必须在 types.ts 里面也用 import 处理 */}
@@ -532,7 +532,7 @@ export default function App() {
             );
           })}
         </div>
-        <div className="absolute left-0 right-0 bottom-[22%] z-20 flex justify-center pointer-events-none translate-y-[220px]">
+        <div className="absolute left-0 right-0 bottom-[22%] z-20 flex justify-center pointer-events-none translate-y-[90%]">
           {/* 使用引入的 counterWoodImage */}
           <img 
             src={counterWoodImage} 
@@ -547,7 +547,7 @@ export default function App() {
         <div className="h-[70%] bg-transparent rounded-3xl border-0 shadow-none px-1 py-1 flex flex-col gap-2">
           
           {/* Top Counter: Stations */}
-          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[550px] relative z-30">
+          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[50%] relative z-30">
             {stations.map(station => (
               <div 
                 key={station.id}
