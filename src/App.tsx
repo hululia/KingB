@@ -39,7 +39,7 @@ import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
 // 根据你第一张截图，盘子在 backgrounds 文件夹下
 import plateImage from './assets/backgrounds/plate.png'; 
-import stationFryerImage from './assets/machines/station_grill.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
+import stationFryerImage from './assets/machines/station_fryer.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
 import stationGrillImage from './assets/machines/station_grill.png'; // 假设 grill 在 machines 文件夹，如果不是请调整
 import stationSauceImage from './assets/machines/station_sauce.png';
 
@@ -535,16 +535,15 @@ export default function App() {
         </div>
 
         {/* 2. Table (z-20, 中间层) - bottom: 20% */}
-<div className="absolute left-0 right-0 bottom-[40%] z-20 flex justify-center pointer-events-none">
-  <img 
-    src={counterWoodImage} 
-    alt="table" 
-    {/* 删掉了 scale-[1.6]，改为 w-full 确保横向铺满，h-auto 或固定高度确保比例正常 */}
-    className="w-full h-auto object-contain opacity-100" 
-    referrerPolicy="no-referrer" 
-    onError={(e)=>(e.currentTarget.style.display='none')} 
-  />
-</div>
+        <div className="absolute left-0 right-0 bottom-[20%] z-20 flex justify-center pointer-events-none">
+          <img 
+            src={counterWoodImage} 
+            alt="table" 
+            className="w-full h-full object-cover opacity-100 scale-[1.6] origin-bottom" 
+            referrerPolicy="no-referrer" 
+            onError={(e)=>(e.currentTarget.style.display='none')} 
+          />
+        </div>
 
         {/* 3. Stations (z-30, 操作层) - bottom: 25% */}
         <div className="absolute left-0 right-0 bottom-[25%] px-2 z-30">
@@ -553,7 +552,7 @@ export default function App() {
               <div 
                 key={station.id}
                 onClick={() => interactWithStation(station.id)}
-                className={`w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative bg-transparent hover:scale-105 active:scale-95 shadow-lg`}
+                className={`w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative ${!station.id.startsWith("grill") ? "scale-[1.08]" : ""} bg-transparent hover:scale-105 active:scale-95 shadow-lg`}
               >
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-400 rounded text-[10px] font-bold text-white uppercase tracking-wider">
                   {station.id.startsWith("grill") ? "GRILL" : station.id.startsWith("fryer") ? "FRYER" : station.id.startsWith("prep") ? "PREP" : "PLATE"}
