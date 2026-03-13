@@ -547,7 +547,7 @@ export default function App() {
         <div className="h-[70%] bg-transparent rounded-3xl border-0 shadow-none px-1 py-1 flex flex-col gap-2">
           
           {/* Top Counter: Stations */}
-          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[50%] relative z-30">
+          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[10%] relative z-30">
             {stations.map(station => (
               <div 
                 key={station.id}
