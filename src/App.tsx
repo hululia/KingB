@@ -32,9 +32,6 @@ import {
   CUSTOMER_COLORS
 } from './types';
 
-// ==========================================
-// Vite 图片 Import
-// ==========================================
 import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
 import plateImage from './assets/backgrounds/plate.png'; 
@@ -81,7 +78,8 @@ export default function App() {
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          setGameState(coins >= currentLevel.targetScore ? 'LEVEL_COMPLETE' : 'GAMEOVER');
+          if (coins >= currentLevel.targetScore) setGameState('LEVEL_COMPLETE');
+          else setGameState('GAMEOVER');
           return 0;
         }
         return prev - 1;
@@ -147,15 +145,18 @@ export default function App() {
   const takeIngredient = (id: IngredientId) => {
     const newIngredient: Ingredient = { id, name: INGREDIENT_DATA[id].name, state: IngredientState.RAW, progress: 0 };
     if (heldItem && Array.isArray(heldItem)) {
-      if (INGREDIENT_DATA[id].cookTime === 0) { setHeldItem([...heldItem, newIngredient]); return; }
+      if (INGREDIENT_DATA[id].cookTime === 0) {
+        setHeldItem([...heldItem, newIngredient]);
+        return;
+      }
     }
     if (['bread', 'cheese', 'lettuce', 'pickles'].includes(id)) {
-      const plateIdx = stations.findIndex(s => s.type === 'PLATE');
-      if (plateIdx !== -1) {
+      const plateIndex = stations.findIndex(s => s.type === 'PLATE');
+      if (plateIndex !== -1) {
         setStations(prev => {
           const updated = [...prev];
-          const currentPlate = Array.isArray(updated[plateIdx].content) ? updated[plateIdx].content as Ingredient[] : [];
-          updated[plateIdx] = { ...updated[plateIdx], content: [...currentPlate, newIngredient] };
+          const currentPlate = Array.isArray(updated[plateIndex].content) ? updated[plateIndex].content as Ingredient[] : [];
+          updated[plateIndex] = { ...updated[plateIndex], content: [...currentPlate, newIngredient] };
           return updated;
         });
         return;
@@ -210,36 +211,40 @@ export default function App() {
   return (
     <div className="h-full w-full flex items-center justify-center font-sans overflow-hidden bg-stone-200 relative">
       <div className="relative w-full max-w-[430px] h-full bg-transparent overflow-hidden">
-        
-        {/* Background */}
         <img src={bgImage} className="absolute inset-0 w-full h-full object-cover object-top opacity-100 pointer-events-none" />
 
-        {/* Top Bar */}
         <header className="h-14 bg-[#8b4f2f]/95 border-b border-[#5d2f1b] flex items-center justify-between px-2 shadow-sm z-50 relative">
           <div className="flex items-center gap-2">
             <ChefHat className="text-amber-100 w-5 h-5" />
-            <span className="text-amber-50 font-bold text-sm">{currentLevel.name}</span>
+            <span className="text-amber-50 font-bold text-sm truncate">{currentLevel.name}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="bg-black/25 text-amber-50 px-2 py-1 rounded text-xs">⏱ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</div>
-            <div className="bg-black/25 text-amber-50 px-2 py-1 rounded text-xs">💰 {coins}</div>
+          <div className="flex items-center gap-1 text-amber-50 font-bold text-xs">
+            <div className="bg-black/25 px-2 py-1 rounded">⏱ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</div>
+            <div className="bg-black/25 px-2 py-1 rounded">💰 {coins}</div>
           </div>
         </header>
 
-        {/* Main Game Area (Absolute Stage) */}
+        {/* ✅ Main Game Area (绝对定位舞台) */}
         <main className="h-[calc(100vh-56px)] relative z-0">
-          
-          {/* 1. Bubbles Layer (top = 75%) */}
+
+          {/* ✅ Bubbles layer (bottom = 75%) */}
           {[0, 1, 2].map(slot => {
             const customer = customers.find(c => c.slotIndex === slot);
             return (
-              <div key={`bubble-${slot}`} className="absolute w-[120px] z-40" style={{ top: '75%', left: `${slot * 33.3 + 16.6}%`, transform: 'translateX(-50%)' }}>
+              <div key={`bubble-${slot}`} className="absolute w-[120px] z-40" style={{ bottom: '75%', left: `${slot * 33.3 + 16.6}%`, transform: 'translateX(-50%)' }}>
                 <AnimatePresence>
                   {customer?.order && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="order-bubble bg-white/90 p-2 rounded-2xl shadow-xl flex flex-col items-center gap-1">
-                      <img src={RECIPES[customer.order.recipeId].image} className="w-10 h-10 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} />
-                      <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
-                        <motion.div className={`h-full ${customer.patience > 50 ? 'bg-emerald-500' : 'bg-red-500'}`} animate={{ width: `${customer.patience}%` }} />
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="order-bubble bg-white/90 p-2 rounded-2xl shadow-xl border-2 border-white flex flex-col items-center gap-1">
+                      <img 
+                        src={RECIPES[customer.order.recipeId].image} 
+                        className="w-10 h-10 object-contain drop-shadow-sm" 
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} 
+                      />
+                      <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <motion.div 
+                          className={`h-full ${customer.patience > 50 ? 'bg-emerald-500' : customer.patience > 25 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                          animate={{ width: `${customer.patience}%` }} 
+                        />
                       </div>
                     </motion.div>
                   )}
@@ -248,15 +253,20 @@ export default function App() {
             );
           })}
 
-          {/* 2. Customer Layer (top = 50%) */}
+          {/* ✅ Customers layer (bottom = 50%) */}
           {[0, 1, 2].map(slot => {
             const customer = customers.find(c => c.slotIndex === slot);
             return (
-              <div key={`cust-${slot}`} className="absolute w-[160px] z-30 flex justify-center" style={{ top: '50%', left: `${slot * 33.3 + 16.6}%`, transform: 'translateX(-50%)' }}>
+              <div key={`cust-${slot}`} className="absolute w-[180px] z-10 flex justify-center" style={{ bottom: '50%', left: `${slot * 33.3 + 16.6}%`, transform: 'translateX(-50%)' }}>
                 <AnimatePresence>
                   {customer && (
-                    <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="cursor-pointer" onClick={() => serveCustomer(slot)}>
-                      <img src={customer.image} className="w-full h-auto drop-shadow-xl" onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} />
+                    <motion.div 
+                      initial={{ y: 50, opacity: 0 }} 
+                      animate={{ y: 0, opacity: 1 }} 
+                      className="cursor-pointer" 
+                      onClick={() => serveCustomer(slot)}
+                    >
+                      <img src={customer.image} className="w-full h-auto drop-shadow-2xl" onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -264,77 +274,95 @@ export default function App() {
             );
           })}
 
-          {/* 3. Table Layer (top = 40%) */}
-          <div className="absolute left-0 right-0 z-20 flex justify-center pointer-events-none" style={{ top: '40%' }}>
-            <img src={counterWoodImage} alt="table" className="w-full h-[140px] object-cover scale-[1.5] origin-bottom" onError={(e)=>(e.currentTarget.style.display='none')} />
+          {/* ✅ Table layer (bottom = 40%) */}
+          <div className="absolute left-0 right-0 z-20 flex justify-center pointer-events-none" style={{ bottom: '40%' }}>
+            <img 
+              src={counterWoodImage} 
+              className="w-full h-[120px] object-cover scale-[1.6] origin-bottom drop-shadow-lg" 
+              onError={(e)=>(e.currentTarget.style.display='none')} 
+            />
           </div>
 
-          {/* 4. Stations Layer (top = 25%) */}
-          <div className="absolute left-2 right-2 grid grid-cols-4 gap-1 z-30" style={{ top: '25%' }}>
+          {/* ✅ Stations layer (bottom = 25%) */}
+          <div className="absolute left-2 right-2 grid grid-cols-4 gap-1 z-30" style={{ bottom: '25%' }}>
             {stations.map(station => (
-              <div key={station.id} onClick={() => interactWithStation(station.id)} className="w-full h-[110px] bg-white/20 rounded-xl border-2 border-white/30 backdrop-blur-sm flex items-center justify-center cursor-pointer shadow-lg">
+              <div 
+                key={station.id} 
+                onClick={() => interactWithStation(station.id)}
+                className="w-full h-[110px] bg-white/10 rounded-xl border-2 border-white/20 backdrop-blur-sm flex items-center justify-center cursor-pointer shadow-lg hover:bg-white/20 transition-all"
+              >
                 {station.content ? (
-                  Array.isArray(station.content) ? (
-                    <img src={plateImage} className="w-16 h-16" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1">
-                       <img src={INGREDIENT_DATA[(station.content as Ingredient).id].image} className="w-12 h-12 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} />
-                       {(station.content as Ingredient).state === IngredientState.COOKING && (
-                         <div className="w-10 h-1 bg-black/20 rounded-full"><div className="h-full bg-orange-500" style={{ width: `${(station.content as Ingredient).progress}%` }} /></div>
-                       )}
-                    </div>
-                  )
+                  <div className="flex flex-col items-center">
+                    <img 
+                      src={Array.isArray(station.content) ? plateImage : INGREDIENT_DATA[(station.content as Ingredient).id].image} 
+                      className="w-14 h-14 object-contain drop-shadow-md" 
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} 
+                    />
+                    {!Array.isArray(station.content) && (station.content as Ingredient).state === IngredientState.COOKING && (
+                      <div className="w-12 h-1.5 bg-black/40 rounded-full mt-1 overflow-hidden">
+                        <div className="h-full bg-orange-500" style={{ width: `${(station.content as Ingredient).progress}%` }} />
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <img src={station.id.includes('fryer') ? stationFryerImage : station.id.includes('grill') ? stationGrillImage : stationSauceImage} className="w-14 h-14 opacity-80" onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} />
+                  <img 
+                    src={station.id.includes('fryer') ? stationFryerImage : station.id.includes('grill') ? stationGrillImage : stationSauceImage} 
+                    className="w-12 h-12 opacity-80" 
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} 
+                  />
                 )}
               </div>
             ))}
           </div>
 
-          {/* Bottom Controls (食材区) */}
+          {/* Bottom Controls */}
           <div className="absolute bottom-4 left-2 right-2 flex justify-between items-end z-50">
             <div className="grid grid-cols-4 gap-1 flex-1">
               {currentLevel.unlockedIngredients.map(id => (
-                <div key={id} onClick={() => takeIngredient(id)} className="bg-white/90 p-2 rounded-lg shadow flex flex-col items-center cursor-pointer active:scale-95">
-                  <img src={INGREDIENT_DATA[id].image} className="w-10 h-10 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} />
-                  <span className="text-[10px] font-bold text-stone-500 uppercase">{INGREDIENT_DATA[id].name}</span>
+                <div key={id} onClick={() => takeIngredient(id)} className="bg-white/95 p-2 rounded-lg shadow-md flex flex-col items-center cursor-pointer active:scale-90 transition-transform border border-stone-200">
+                  <img src={INGREDIENT_DATA[id].image} className="w-10 h-10 object-contain" />
+                  <span className="text-[9px] font-bold text-stone-500 uppercase mt-1">{INGREDIENT_DATA[id].name}</span>
                 </div>
               ))}
             </div>
-            <div onClick={() => setHeldItem(null)} className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center ml-2 cursor-pointer"><XCircle className="text-red-500" /></div>
+            <div onClick={() => setHeldItem(null)} className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center ml-2 cursor-pointer shadow-lg border-2 border-red-200 active:scale-90">
+              <XCircle className="text-red-500 w-8 h-8" />
+            </div>
           </div>
-
-          {/* Floating Held Item */}
-          <AnimatePresence>
-            {heldItem && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="fixed bottom-32 left-1/2 -translate-x-1/2 pointer-events-none z-[100] bg-white/90 p-3 rounded-xl shadow-2xl border-2 border-emerald-500 flex items-center gap-2">
-                <span className="text-xs font-bold uppercase text-emerald-600">Holding</span>
-                {Array.isArray(heldItem) ? <Utensils /> : <img src={INGREDIENT_DATA[heldItem.id].image} className="w-8 h-8 object-contain" />}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </main>
       </div>
 
-      {/* Menu Overlays (Start/Select/GameOver etc.) */}
+      {/* Overlays (不改动风格) */}
       {gameState === 'START' && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6">
-          <div className="bg-white p-10 rounded-3xl text-center shadow-2xl">
-            <ChefHat className="w-16 h-16 mx-auto mb-4 text-emerald-600" />
-            <h1 className="text-3xl font-bold mb-6">Kitchen Master</h1>
-            <button onClick={() => setGameState('LEVEL_SELECT')} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg">PLAY GAME</button>
+        <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-6 text-center">
+          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white rounded-3xl p-12 max-w-md shadow-2xl">
+            <ChefHat className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+            <h2 className="text-4xl font-bold mb-4">Kitchen Master</h2>
+            <button onClick={() => setGameState('LEVEL_SELECT')} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg">START COOKING</button>
+          </motion.div>
+        </div>
+      )}
+
+      {gameState === 'LEVEL_SELECT' && (
+        <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full grid grid-cols-4 gap-3 overflow-y-auto max-h-[70vh]">
+            {LEVELS.map((level, idx) => (
+              <button key={level.id} onClick={() => startLevel(idx)} className="aspect-square bg-stone-100 rounded-xl font-bold text-xl hover:bg-emerald-100 border-2 border-stone-200">
+                {level.id}
+              </button>
+            ))}
           </div>
         </div>
       )}
-      
-      {/* 关卡选择逻辑保持不变... */}
-      {gameState === 'LEVEL_SELECT' && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6">
-          <div className="bg-white p-6 rounded-3xl max-w-sm w-full grid grid-cols-4 gap-2">
-            {LEVELS.map((l, i) => (
-              <button key={l.id} onClick={() => startLevel(i)} className="aspect-square bg-stone-100 rounded-lg font-bold hover:bg-emerald-100">{l.id}</button>
-            ))}
-          </div>
+
+      {/* 结算与失败界面保持原有逻辑... */}
+      { (gameState === 'LEVEL_COMPLETE' || gameState === 'GAMEOVER') && (
+        <div className="fixed inset-0 bg-stone-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 text-center">
+           <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-sm w-full">
+              <h2 className="text-3xl font-bold mb-4">{gameState === 'LEVEL_COMPLETE' ? 'Success!' : 'Failed!'}</h2>
+              <div className="text-5xl font-bold text-emerald-600 mb-8">💰 {coins}</div>
+              <button onClick={() => setGameState('LEVEL_SELECT')} className="w-full bg-stone-900 text-white py-4 rounded-xl font-bold">BACK TO MENU</button>
+           </div>
         </div>
       )}
     </div>
