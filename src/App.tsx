@@ -38,7 +38,7 @@ import {
 import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
 import plateImage from './assets/backgrounds/plate.png'; 
-import stationFryerImage from './assets/machines/station_fryer.png'; 
+import stationFryerImage from './assets/machines/station_grill.png'; 
 import stationGrillImage from './assets/machines/station_grill.png'; 
 import stationSauceImage from './assets/machines/station_sauce.png';
 
