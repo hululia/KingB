@@ -39,7 +39,7 @@ import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
 // 根据你第一张截图，盘子在 backgrounds 文件夹下
 import plateImage from './assets/backgrounds/plate.png'; 
-import stationFryerImage from './assets/machines/station_grill.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
+import stationFryerImage from './assets/machines/station_fryer.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
 import stationGrillImage from './assets/machines/station_grill.png'; // 假设 grill 在 machines 文件夹，如果不是请调整
 import stationSauceImage from './assets/machines/station_sauce.png';
 
@@ -493,33 +493,27 @@ export default function App() {
                       className="flex flex-col items-center gap-2 cursor-pointer"
                       onClick={() => serveCustomer(slot)}
                     >
-{/* Order Bubble */}
-<div className="absolute bottom-[810px] left-1/2 -translate-x-1/2 z-30 order-bubble scale-95">
-  <div className="flex flex-col items-center gap-1">
-    {/* 气泡背景容器 */}
-    <div className="relative w-14 h-14 flex items-center justify-center bg-white/95 rounded-full p-2 shadow-xl border-2 border-stone-100">
-      <img 
-        src={RECIPES[customer.order!.recipeId].image} 
-        alt=""
-        className="w-full h-full object-contain relative z-10 drop-shadow-md"
-        referrerPolicy="no-referrer"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-      />
-      
-      {/* 像素风装饰：对话框小尖角 */}
-      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white/95 rotate-45 border-r-2 border-b-2 border-stone-100 z-0"></div>
-    </div>
-
-    {/* 耐心进度条 */}
-    <div className="w-12 h-2 bg-stone-200 rounded-full overflow-hidden shadow-inner border border-stone-300">
-      <motion.div 
-        className={`h-full ${customer.patience > 50 ? 'bg-emerald-500' : customer.patience > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
-        animate={{ width: `${customer.patience}%` }}
-        transition={{ type: 'spring', damping: 20 }}
-      />
-    </div>
-  </div>
-</div>
+                      {/* Order Bubble */}
+                      <div className="order-bubble mb-2 translate-y-[500px] scale-95">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="relative w-12 h-12 flex items-center justify-center">
+                            {/* 此处的图片来源于 RECIPES 对象，必须在 types.ts 里面也用 import 处理 */}
+                            <img 
+                              src={RECIPES[customer.order!.recipeId].image} 
+                              alt=""
+                              className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
+                            />
+                          </div>
+                          <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                            <motion.div 
+                              className={`h-full ${customer.patience > 50 ? 'bg-emerald-500' : customer.patience > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
+                              animate={{ width: `${customer.patience}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
                       {/* Customer Avatar */}
                       <div className="w-[210px] h-[210px] relative flex items-end justify-center overflow-visible translate-y-[120%]">
                         {/* 来源于 CUSTOMER_IMAGES 对象，需在 types.ts 导入 */}
@@ -538,7 +532,7 @@ export default function App() {
             );
           })}
         </div>
-        <div className="absolute left-0 right-0 bottom-[22%] z-20 flex justify-center pointer-events-none translate-y-[90%]">
+        <div className="absolute left-0 right-0 bottom-[22%] z-20 flex justify-center pointer-events-none translate-y-[220px]">
           {/* 使用引入的 counterWoodImage */}
           <img 
             src={counterWoodImage} 
@@ -553,7 +547,7 @@ export default function App() {
         <div className="h-[70%] bg-transparent rounded-3xl border-0 shadow-none px-1 py-1 flex flex-col gap-2">
           
           {/* Top Counter: Stations */}
-          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[10%] relative z-30">
+          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[550px] relative z-30">
             {stations.map(station => (
               <div 
                 key={station.id}
