@@ -285,7 +285,7 @@ export default function App() {
                   <AnimatePresence>
                     {customer && (
                       <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => serveCustomer(slot)}>
-                        <div className="order-bubble mb-2 translate-y-[500px] scale-95">
+                        <div className="order-bubble mb-2 translate-y-[90%] scale-95">
                           <div className="flex flex-col items-center gap-1">
                             <div className="relative w-12 h-12 flex items-center justify-center"> <img src={RECIPES[customer.order!.recipeId].image} alt="" className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]" referrerPolicy="no-referrer" onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} /> </div>
                             <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden"> <motion.div className={`h-full ${customer.patience > 50 ? 'bg-emerald-500' : customer.patience > 25 ? 'bg-amber-500' : 'bg-red-500'}`} animate={{ width: `${customer.patience}%` }} /> </div>
@@ -300,14 +300,14 @@ export default function App() {
             })}
           </div>
 
-          <div className="absolute left-0 right-0 bottom-[22%] z-20 flex justify-center pointer-events-none translate-y-[220px]">
+          <div className="absolute left-0 right-0 bottom-[22%] z-20 flex justify-center pointer-events-none translate-y-[100%]">
             <img src={counterWoodImage} alt="table" className="w-full h-[120px] object-cover opacity-100 scale-[1.6] origin-bottom" referrerPolicy="no-referrer" onError={(e)=>(e.currentTarget.style.display='none')} />
           </div>
 
           <div className="h-[70%] bg-transparent rounded-3xl border-0 shadow-none px-1 py-1 flex flex-col gap-2">
             
             {/* ✨ 修改后的 Stations 渲染区域 ✨ */}
-            <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[550px] relative z-30">
+            <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[80%] relative z-30">
               {stations.map((station) => {
                 // 1. 预计算：如果是正在烹饪的肉类，则应用 60% 缩放
                 const isMeatCooking = !Array.isArray(station.content) && 
