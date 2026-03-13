@@ -495,7 +495,7 @@ export default function App() {
                     >
                       {/* Order Bubble */}
                       {/* Order Bubble */}
-                       <div className="order-bubble absolute bottom-[5%] mb-2 scale-95">
+                       <div className="order-bubble absolute top-[30%] mb-2 scale-95">
                     {/* 移除了 mb-2 和 translate-y-[160%]，因为绝对定位下这些边距/位移无意义 */}
                       <div className="flex flex-col items-center gap-1">
                       <div className="relative w-12 h-12 flex items-center justify-center">
