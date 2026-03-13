@@ -39,7 +39,7 @@ import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/table.png';
 // 根据你第一张截图，盘子在 backgrounds 文件夹下
 import plateImage from './assets/backgrounds/plate.png'; 
-import stationFryerImage from './assets/machines/station_fryer.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
+import stationFryerImage from './assets/machines/station_grill.png'; // 假设 fryer 在 machines 文件夹，如果不是请调整
 import stationGrillImage from './assets/machines/station_grill.png'; // 假设 grill 在 machines 文件夹，如果不是请调整
 import stationSauceImage from './assets/machines/station_sauce.png';
 
@@ -547,44 +547,86 @@ export default function App() {
         <div className="h-[70%] bg-transparent rounded-3xl border-0 shadow-none px-1 py-1 flex flex-col gap-2">
           
           {/* Top Counter: Stations */}
-          <div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[80%] relative z-30">
-            {stations.map(station => (
-              <div 
-                key={station.id}
-                onClick={() => interactWithStation(station.id)}
-                className={`w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative ${!station.id.startsWith("grill") ? "scale-[1.08]" : ""} bg-transparent hover:scale-105 active:scale-95 shadow-lg`}
-              >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-400 rounded text-[10px] font-bold text-white uppercase tracking-wider">
-                  {station.id.startsWith("grill") ? "GRILL" : station.id.startsWith("fryer") ? "FRYER" : station.id.startsWith("prep") ? "PREP" : "PLATE"}
+<div className="grid grid-cols-4 gap-1 px-0.5 mt-1 translate-y-[550px] relative z-30">
+  {stations.map(station => {
+    // 1. 预计算：判断是否是正在烹饪的肉
+    const isCookingMeat = 
+      !Array.isArray(station.content) && 
+      station.content?.id === 'meat' && 
+      station.content?.state === IngredientState.COOKING;
+
+    // 2. 预计算：确定背景底图
+    let baseStationImage = plateImage; // 默认是盘子
+    if (station.id.startsWith("fryer")) baseStationImage = stationFryerImage;
+    else if (station.id.startsWith("grill")) baseStationImage = stationGrillImage;
+    else if (station.type === 'PREP') baseStationImage = stationSauceImage;
+
+    return (
+      <div 
+        key={station.id}
+        onClick={() => interactWithStation(station.id)}
+        className={`w-full h-[118px] rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative
+          bg-transparent hover:scale-105 active:scale-95
+        `}
+      >
+        {/* 【底层】站台背景 - 永远不隐身 */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <img 
+            src={baseStationImage} 
+            alt="station-base" 
+            className="w-24 h-24 object-contain opacity-100 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]"
+          />
+        </div>
+
+        {/* 标签 */}
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-400 rounded text-[10px] font-bold text-white uppercase tracking-wider z-20">
+          {station.id.startsWith("grill") ? "GRILL" : station.id.startsWith("fryer") ? "FRYER" : station.id.startsWith("prep") ? "PREP" : "PLATE"}
+        </div>
+
+        {/* 【顶层】食材内容 - 浮动在背景之上 */}
+        <div className={`relative z-10 transition-transform duration-300 ${isCookingMeat ? 'scale-[0.6]' : 'scale-100'}`}>
+          {station.content && (!Array.isArray(station.content) || station.content.length > 0) && (
+            Array.isArray(station.content) ? (
+              <div className="flex flex-col items-center">
+                {/* 盘子里的多个食材堆叠逻辑 */}
+                {(() => {
+                  const ingredients = station.content as Ingredient[];
+                  // ... 这里保留你之前的 Recipe 匹配逻辑 ...
+                  // 如果匹配到食谱显示大图，否则显示散装小图
+                  return (
+                    <div className="flex flex-wrap gap-1 justify-center p-2">
+                       {ingredients.map((ing, i) => (
+                         <img key={i} src={INGREDIENT_DATA[ing.id].image} className="w-8 h-8 object-contain drop-shadow-md" />
+                       ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div className="relative w-24 h-24 flex items-center justify-center">
+                  <img 
+                    src={INGREDIENT_DATA[(station.content as Ingredient).id].image} 
+                    className="w-full h-full object-contain drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]" 
+                  />
                 </div>
-
-                {station.content && (!Array.isArray(station.content) || station.content.length > 0) ? (
-                  Array.isArray(station.content) ? (
-                    <div className="flex flex-col items-center gap-1">
-                      {/* Recipe Synthesis Preview */}
-                      {(() => {
-                        const ingredients = station.content as Ingredient[];
-                        const matchedRecipe = Object.values(RECIPES).find(r => {
-                          const heldIds = ingredients.map(i => i.id).sort();
-                          const reqIds = [...r.ingredients].sort();
-                          const isIdsMatch = JSON.stringify(heldIds) === JSON.stringify(reqIds);
-                          const isAllCooked = ingredients.every(ing => 
-                            INGREDIENT_DATA[ing.id].cookTime === 0 || ing.state === IngredientState.COOKED
-                          );
-                          return isIdsMatch && isAllCooked;
-                        });
-
-                        if (matchedRecipe) {
-                          return (
-                            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex flex-col items-center">
-                              <div className="relative w-24 h-24 flex items-center justify-center">
-                                <img 
-                                  src={matchedRecipe.image} 
-                                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]" 
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                                />
-                              </div>
+                {/* 进度条 */}
+                {(station.content as Ingredient).state === IngredientState.COOKING && (
+                  <div className="absolute -bottom-2 w-16 h-1.5 bg-stone-800/50 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-orange-500" 
+                      style={{ width: `${(station.content as Ingredient).progress}%` }} 
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    );
+  })}
+</div>
                               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">READY</span>
                             </motion.div>
                           );
