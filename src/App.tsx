@@ -539,7 +539,7 @@ export default function App() {
           <img 
             src={counterWoodImage} 
             alt="table" 
-            className="w-full h-full object-cover opacity-100 scale-[1.6] origin-bottom" 
+            className="w-full h-full object-cover opacity-100 origin-bottom" 
             referrerPolicy="no-referrer" 
             onError={(e)=>(e.currentTarget.style.display='none')} 
           />
