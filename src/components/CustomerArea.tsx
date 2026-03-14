@@ -27,7 +27,7 @@ export default function CustomerArea({
                   className="flex flex-col items-center pointer-events-auto"
                   onClick={() => serveCustomer(slot)}
                 >
-                  <div className="absolute bottom-[69%] left-1/2 -translate-x-1/2 z-40 mb-4">
+                  <div className="absolute bottom-[74%] left-1/2 -translate-x-1/2 z-40 mb-4">
                     <div className="order-bubble scale-90">
                       <div className="flex flex-col items-center gap-1">
                         <div className="relative w-10 h-10 flex items-center justify-center">

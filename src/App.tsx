@@ -490,7 +490,7 @@ export default function App() {
         <CustomerArea customers={customers} serveCustomer={serveCustomer} plateImage={plateImage} />
 
         {/* 2. Table (z-20, 中间层) */}
-        <div className="absolute left-0 right-0 bottom-[10%] z-20 flex justify-center pointer-events-none">
+        <div className="absolute left-0 right-0 bottom-[5%] z-20 flex justify-center pointer-events-none">
           <img 
             src={counterWoodImage} 
             alt="table" 
