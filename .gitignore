@@ -8,3 +8,8 @@ dist
 *.png
 *take_screenshot*.mjs
 *take_level1*.mjs
+
+# temp assets/backups
+*.bak_*
+/tmp_*/
+*.zip
