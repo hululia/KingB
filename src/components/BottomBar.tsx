@@ -24,7 +24,7 @@ export default function BottomBar({
               e.preventDefault();
               takeIngredient(id);
             }}
-            className="w-[64px] h-[74px] bg-white/40 rounded-lg border border-white/30 shadow-sm flex flex-col items-center justify-center cursor-pointer"
+            className="w-[64px] h-[74px] bg-white/40 rounded-lg border border-white/30 shadow-sm flex flex-col items-center justify-center cursor-pointer touch-manipulation"
           >
             <div className="relative w-12 h-12 flex items-center justify-center mb-1">
               <img

@@ -32,7 +32,7 @@ export default function StationsArea({
               e.preventDefault();
               interactWithStation(station.id);
             }}
-            className="w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative bg-transparent hover:scale-105 active:scale-95 shadow-lg"
+            className="w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative bg-transparent hover:scale-105 active:scale-95 shadow-lg touch-manipulation"
 >
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-400 rounded text-[10px] font-bold text-white uppercase tracking-wider">
               {station.id.startsWith('grill')
