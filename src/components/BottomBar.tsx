@@ -27,7 +27,7 @@ export default function BottomBar({
               <img
                 src={INGREDIENT_DATA[id].image}
                 alt=""
-                className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] scale-[1.2]"
+                className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] scale-[0.98]"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = plateImage;

@@ -32,8 +32,15 @@
     background: #000;
   }
 
-  /* Mobile Safari: true fullscreen */
+  /* Mobile Safari: as-close-as-possible fullscreen */
   @media (max-width: 500px) {
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       display: block;
       justify-content: initial;
@@ -42,7 +49,7 @@
 
     #root {
       width: 100vw;
-      height: 100vh;
+      height: 100dvh; /* dynamic viewport height for iOS Safari */
       max-width: none;
       max-height: none;
       border-radius: 0;
