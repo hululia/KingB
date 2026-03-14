@@ -13,7 +13,7 @@ export default function CustomerArea({
   plateImage: string;
 }) {
   return (
-    <div className="absolute left-0 right-0 bottom-[40%] h-[220px] flex justify-between px-4 items-end z-10 pointer-events-none">
+    <div className="absolute left-0 right-0 bottom-[45%] h-[220px] flex justify-between px-4 items-end z-10 pointer-events-none">
       {[0, 1, 2].map((slot) => {
         const customer = customers.find((c) => c.slotIndex === slot);
         return (
@@ -27,7 +27,7 @@ export default function CustomerArea({
                   className="flex flex-col items-center pointer-events-auto"
                   onClick={() => serveCustomer(slot)}
                 >
-                  <div className="absolute bottom-[74%] left-1/2 -translate-x-1/2 z-40 mb-4">
+                  <div className="absolute bottom-[79%] left-1/2 -translate-x-1/2 z-40 mb-4">
                     <div className="order-bubble scale-90">
                       <div className="flex flex-col items-center gap-1">
                         <div className="relative w-10 h-10 flex items-center justify-center">

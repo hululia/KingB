@@ -4,8 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "engines": {
-    "node": ">=20.x"
+    "node": ">=18 <23"
   },
+  "packageManager": "npm@10",
+
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
