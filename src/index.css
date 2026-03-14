@@ -18,6 +18,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Default: iPhone portrait reference size (nice framed look on desktop) */
