@@ -6,13 +6,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
+  Timer, 
+  Coins, 
+  Pause, 
+  Play, 
+  RotateCcw, 
+  Flame, 
+  Utensils, 
   CheckCircle2, 
   XCircle,
   ChefHat,
   Trophy,
-  ArrowRight,
-  Play,
-  RotateCcw
+  ArrowRight
 } from 'lucide-react';
 import { 
   IngredientId, 
@@ -28,7 +33,7 @@ import {
 } from './types';
 
 // ==========================================
-// 图片资源 Import
+// Vite 图片 Import
 // ==========================================
 import bgImage from './assets/backgrounds/background.png';
 import counterWoodImage from './assets/backgrounds/counter_wood.png';
@@ -56,9 +61,10 @@ export default function App() {
   const currentLevel = LEVELS[currentLevelIdx];
 
   const startLevel = (idx: number) => {
+    const level = LEVELS[idx];
     setCurrentLevelIdx(idx);
     setGameState('PLAYING');
-    setTimeLeft(LEVELS[idx].duration);
+    setTimeLeft(level.duration);
     setCoins(0);
     setCustomers([]);
     setStations([
@@ -70,10 +76,8 @@ export default function App() {
     setHeldItem(null);
   };
 
-  // 游戏主循环 (处理烹饪进度和顾客)
   useEffect(() => {
     if (gameState !== 'PLAYING') return;
-
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -99,91 +103,130 @@ export default function App() {
       }));
 
       setCustomers(prev => {
-        const updated = prev.map(c => {
-          if (!c.order) return c;
-          const newTime = c.order.remainingTime - 0.1;
-          return { ...c, order: newTime <= 0 ? null : { ...c.order, remainingTime: newTime }, patience: (newTime / c.order.totalTime) * 100 };
-        }).filter(c => c.order !== null);
-        
-        if (updated.length < MAX_CUSTOMERS && Math.random() < currentLevel.customerSpawnRate) {
-          const recipeId = currentLevel.availableRecipes[Math.floor(Math.random() * currentLevel.availableRecipes.length)];
-          const typeIdx = Math.floor(Math.random() * CUSTOMER_IMAGES.length);
-          updated.push({
+        const updated = prev.map(customer => {
+          if (customer.order) {
+            const newTime = customer.order.remainingTime - 0.1;
+            if (newTime <= 0) return { ...customer, order: null, patience: 0 };
+            return { ...customer, order: { ...customer.order, remainingTime: newTime }, patience: (newTime / customer.order.totalTime) * 100 };
+          }
+          return customer;
+        });
+        return updated.filter(c => c.order !== null || Math.random() > 0.99);
+      });
+
+      setCustomers(prev => {
+        if (prev.length < MAX_CUSTOMERS && Math.random() < currentLevel.customerSpawnRate) {
+          const recipeIds = currentLevel.availableRecipes;
+          const randomRecipe = RECIPES[recipeIds[Math.floor(Math.random() * recipeIds.length)]];
+          const typeIndex = Math.floor(Math.random() * CUSTOMER_IMAGES.length);
+          return [...prev, {
             id: Math.random().toString(36).substr(2, 9),
-            slotIndex: [0, 1, 2].find(i => !updated.some(c => c.slotIndex === i)) ?? 0,
+            slotIndex: [0, 1, 2].find(i => !prev.some(c => c.slotIndex === i)) ?? 0,
             patience: 100,
-            image: CUSTOMER_IMAGES[typeIdx],
-            color: CUSTOMER_COLORS[typeIdx],
-            order: { id: Math.random().toString(36).substr(2, 9), recipeId, remainingTime: currentLevel.orderTime, totalTime: currentLevel.orderTime }
-          });
+            image: CUSTOMER_IMAGES[typeIndex],
+            color: CUSTOMER_COLORS[typeIndex],
+            order: { id: Math.random().toString(36).substr(2, 9), recipeId: randomRecipe.id, remainingTime: currentLevel.orderTime, totalTime: currentLevel.orderTime }
+          }];
         }
-        return updated;
+        return prev;
       });
     }, 100);
-
     return () => clearInterval(interval);
   }, [gameState, coins, currentLevel]);
 
-  // 交互逻辑
   const takeIngredient = (id: IngredientId) => {
-    const newIng: Ingredient = { id, name: INGREDIENT_DATA[id].name, state: IngredientState.RAW, progress: 0 };
-    
-    // 如果手里拿着盘子，且点的是不需要烹饪的食材（如生菜），直接进盘子
+    const newIngredient: Ingredient = { id, name: INGREDIENT_DATA[id].name, state: IngredientState.RAW, progress: 0 };
     if (heldItem && Array.isArray(heldItem) && INGREDIENT_DATA[id].cookTime === 0) {
-      setHeldItem([...heldItem, newIng]);
+      setHeldItem([...heldItem, newIngredient]);
       return;
     }
-    
-    // 如果手是空的，拿起来
-    if (!heldItem) setHeldItem(newIng);
+    if (['bread', 'cheese', 'lettuce', 'pickles'].includes(id)) {
+      const plateIndex = stations.findIndex(s => s.type === 'PLATE');
+      if (plateIndex !== -1) {
+        setStations(prev => {
+          const updated = [...prev];
+          const currentPlate = Array.isArray(updated[plateIndex].content) ? updated[plateIndex].content as Ingredient[] : [];
+          updated[plateIndex] = { ...updated[plateIndex], content: [...currentPlate, newIngredient] };
+          return updated;
+        });
+        return;
+      }
+    }
+    if (id === 'tomato' || id === 'onion') {
+      const emptyPrepIndex = stations.findIndex(s => s.type === 'PREP' && !s.content);
+      if (emptyPrepIndex !== -1) {
+        setStations(prev => {
+          const updated = [...prev];
+          updated[emptyPrepIndex] = { ...updated[emptyPrepIndex], content: { ...newIngredient, state: IngredientState.COOKING } };
+          return updated;
+        });
+        return;
+      }
+    }
+    if (INGREDIENT_DATA[id].cookTime > 0 && id !== 'tomato' && id !== 'onion') {
+      const emptyStoveIndex = stations.findIndex(s => s.type === 'STOVE' && !s.content);
+      if (emptyStoveIndex !== -1) {
+        setStations(prev => {
+          const updated = [...prev];
+          updated[emptyStoveIndex] = { ...updated[emptyStoveIndex], content: { ...newIngredient, state: IngredientState.COOKING } };
+          return updated;
+        });
+        return;
+      }
+    }
+    if (!heldItem) setHeldItem(newIngredient);
   };
 
   const interactWithStation = (stationId: string) => {
     setStations(prev => {
-      const idx = prev.findIndex(s => s.id === stationId);
-      const station = prev[idx];
+      const station = prev.find(s => s.id === stationId);
+      if (!station) return prev;
       const newStations = [...prev];
+      const index = prev.findIndex(s => s.id === stationId);
 
-      // 1. 如果手里有东西
-      if (heldItem) {
-        if (!Array.isArray(heldItem)) {
-          // 放到 Stove 或 Prep
-          const isCookable = INGREDIENT_DATA[heldItem.id].cookTime > 0;
-          if ((station.type === 'STOVE' || station.type === 'PREP') && !station.content && isCookable) {
-            newStations[idx] = { ...station, content: { ...heldItem, state: IngredientState.COOKING } };
-            setHeldItem(null);
-          } 
-          // 放到 Plate
-          else if (station.type === 'PLATE') {
-            const currentContent = Array.isArray(station.content) ? station.content : [];
-            newStations[idx] = { ...station, content: [...currentContent, heldItem] };
-            setHeldItem(null);
+      if ((station.type === 'STOVE' || station.type === 'PREP') && station.content && !Array.isArray(station.content)) {
+        const ingredient = station.content as Ingredient;
+        if (ingredient.state === IngredientState.COOKED) {
+          const plateIndex = stations.findIndex(s => s.type === 'PLATE');
+          if (plateIndex !== -1) {
+            const currentPlate = Array.isArray(newStations[plateIndex].content) ? newStations[plateIndex].content as Ingredient[] : [];
+            newStations[plateIndex] = { ...newStations[plateIndex], content: [...currentPlate, ingredient] };
+            newStations[index] = { ...station, content: null };
+            return newStations;
           }
-        } else if (station.type === 'PLATE' && (!station.content || (station.content as Ingredient[]).length === 0)) {
-          // 放回盘子
-          newStations[idx] = { ...station, content: heldItem };
+        }
+      }
+
+      if (heldItem && !Array.isArray(heldItem)) {
+        const isCookable = INGREDIENT_DATA[heldItem.id].cookTime > 0;
+        const isPrepItem = heldItem.id === 'tomato' || heldItem.id === 'onion';
+        if (station.type === 'STOVE' && !isPrepItem && !station.content && isCookable) {
+          newStations[index] = { ...station, content: { ...heldItem, state: IngredientState.COOKING } };
+          setHeldItem(null);
+        } else if (station.type === 'PREP' && isPrepItem && !station.content) {
+          newStations[index] = { ...station, content: { ...heldItem, state: IngredientState.COOKING } };
+          setHeldItem(null);
+        } else if (station.type === 'PLATE') {
+          const currentPlate = Array.isArray(station.content) ? station.content : [];
+          newStations[index] = { ...station, content: [...currentPlate, heldItem] };
           setHeldItem(null);
         }
-      } 
-      // 2. 如果手是空的，拿起 Station 上的东西
-      else if (station.content) {
-        setHeldItem(station.content);
-        newStations[idx] = { ...station, content: station.type === 'PLATE' ? [] : null };
+      } else if (!heldItem && station.content) {
+        setHeldItem(station.content as Ingredient | Ingredient[]);
+        newStations[index] = { ...station, content: station.type === 'PLATE' ? [] : null };
       }
       return newStations;
     });
   };
 
-  const serveCustomer = (slot: number) => {
+  const serveCustomer = (customerIndex: number) => {
     if (!heldItem || !Array.isArray(heldItem)) return;
-    const customer = customers.find(c => c.slotIndex === slot);
+    const customer = customers.find(c => c.slotIndex === customerIndex);
     if (!customer?.order) return;
-
     const recipe = RECIPES[customer.order.recipeId];
     const heldIds = heldItem.map(i => i.id).sort();
-    const reqIds = [...recipe.ingredients].sort();
-
-    if (JSON.stringify(heldIds) === JSON.stringify(reqIds)) {
+    const requiredIds = [...recipe.ingredients].sort();
+    if (JSON.stringify(heldIds) === JSON.stringify(requiredIds)) {
       setCoins(prev => prev + recipe.score);
       setCustomers(prev => prev.filter(c => c.id !== customer.id));
       setHeldItem(null);
@@ -191,36 +234,32 @@ export default function App() {
   };
 
   return (
-    <div className="h-full w-full flex items-center justify-center bg-stone-200">
-      <div className="relative w-full max-w-[430px] h-screen bg-stone-100 overflow-hidden shadow-2xl">
+    <div className="h-full w-full flex items-center justify-center font-sans overflow-hidden bg-stone-200 relative">
+      <div className="relative w-full max-w-[430px] h-full bg-transparent overflow-hidden">
+        <img src={bgImage} className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none" />
         
-        {/* 背景图 */}
-        <img src={bgImage} className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-
-        {/* 顶部栏 */}
-        <header className="h-14 bg-[#8b4f2f] flex items-center justify-between px-4 z-50 relative border-b-2 border-black/20">
-          <div className="flex items-center gap-2 text-white font-bold"><ChefHat size={20}/> {currentLevel.name}</div>
-          <div className="flex gap-2 text-xs font-bold text-amber-50">
-            <div className="bg-black/30 px-2 py-1 rounded">⏱ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</div>
-            <div className="bg-black/30 px-2 py-1 rounded">💰 {coins} / {currentLevel.targetScore}</div>
+        <header className="h-14 bg-[#8b4f2f]/95 flex items-center justify-between px-2 z-50 relative shadow-sm border-b border-black/20">
+          <div className="flex items-center gap-2"><ChefHat className="text-amber-100 w-5 h-5" /><span className="text-amber-50 font-bold text-sm">{currentLevel.name}</span></div>
+          <div className="flex items-center gap-1 text-xs font-bold text-amber-50">
+            <div className="bg-black/25 px-2 py-1 rounded">⏱ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</div>
+            <div className="bg-black/25 px-2 py-1 rounded">💰 {coins}</div>
           </div>
         </header>
 
-        <main className="h-[calc(100vh-56px)] relative z-0">
-          
-          {/* 顾客区 */}
-          <div className="absolute inset-x-0 bottom-[58%] h-[180px] flex justify-around px-4 items-end z-10">
+        <main className="h-[calc(100vh-56px)] relative z-0 overflow-hidden">
+          {/* Customers */}
+          <div className="absolute left-0 right-0 bottom-[50%] h-[220px] flex justify-between px-4 items-end z-10 pointer-events-none">
             {[0, 1, 2].map(slot => {
-              const c = customers.find(cust => cust.slotIndex === slot);
+              const customer = customers.find(c => c.slotIndex === slot);
               return (
-                <div key={slot} className="w-24 relative flex flex-col items-center">
+                <div key={slot} className="w-[122px] flex flex-col items-center justify-end relative">
                   <AnimatePresence>
-                    {c && (
-                      <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} exit={{y:20, opacity:0}} onClick={() => serveCustomer(slot)}>
-                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white p-1 rounded-lg border-2 border-stone-200 shadow-lg">
-                          <img src={RECIPES[c.order!.recipeId].image} className="w-8 h-8 object-contain"/>
+                    {customer && (
+                      <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="flex flex-col items-center pointer-events-auto" onClick={() => serveCustomer(slot)}>
+                        <div className="absolute bottom-[79%] left-1/2 -translate-x-1/2 z-40 mb-4 order-bubble scale-90">
+                           <img src={RECIPES[customer.order!.recipeId].image} className="w-10 h-10 object-contain drop-shadow-lg" />
                         </div>
-                        <img src={c.image} className="w-20 h-20 object-contain"/>
+                        <img src={customer.image} className="w-[190px] h-[190px] object-contain drop-shadow-lg" />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -229,25 +268,21 @@ export default function App() {
             })}
           </div>
 
-          {/* 桌子 */}
-          <div className="absolute inset-x-0 bottom-0 z-20"><img src={counterWoodImage} className="w-full object-cover"/></div>
+          <div className="absolute left-0 right-0 bottom-0 z-20 pointer-events-none"><img src={counterWoodImage} className="w-full object-cover" /></div>
 
-          {/* 厨具区 (Station) */}
-          <div className="absolute inset-x-0 bottom-[32%] px-6 z-30">
-            <div className="grid grid-cols-4 gap-4">
-              {stations.map(s => (
-                <div key={s.id} onClick={() => interactWithStation(s.id)} className="relative aspect-square flex items-center justify-center">
-                  <img src={s.id.includes('grill') ? stationGrillImage : s.id.includes('fryer') ? stationFryerImage : s.id.includes('prep') ? stationSauceImage : plateImage} className="absolute inset-0 w-full h-full object-contain" />
-                  <div className="relative z-10 scale-90">
-                    {s.content && (Array.isArray(s.content) ? (
-                      <div className="flex flex-wrap gap-0.5 justify-center">
-                        {s.content.map((ing, i) => <img key={i} src={INGREDIENT_DATA[ing.id].image} className="w-5 h-5 object-contain" />)}
-                      </div>
+          {/* Stations */}
+          <div className="absolute left-0 right-0 bottom-[25%] px-2 z-30">
+            <div className="grid grid-cols-4 gap-1">
+              {stations.map(station => (
+                <div key={station.id} onClick={() => interactWithStation(station.id)} className="w-full h-[118px] rounded-xl flex items-center justify-center cursor-pointer transition-all active:scale-95 relative shadow-lg">
+                  <img src={station.id.startsWith("fryer") ? stationFryerImage : station.id.startsWith("grill") ? stationGrillImage : station.id.startsWith("prep") ? stationSauceImage : plateImage} className="absolute inset-0 w-full h-full object-contain" />
+                  <div className="relative z-10">
+                    {station.content && (Array.isArray(station.content) ? (
+                      <div className="flex flex-wrap gap-1 justify-center">{station.content.map((ing, i) => <img key={i} src={INGREDIENT_DATA[ing.id].image} className="w-8 h-8 object-contain" />)}</div>
                     ) : (
                       <div className="flex flex-col items-center">
-                        <img src={INGREDIENT_DATA[s.content.id].image} className="w-12 h-12 object-contain" />
-                        {s.content.state === IngredientState.COOKING && <div className="w-10 h-1 bg-black/40 rounded-full mt-1 overflow-hidden"><div className="h-full bg-orange-500" style={{width:`${s.content.progress}%`}}/></div>}
-                        {s.content.state === IngredientState.COOKED && <CheckCircle2 size={14} className="text-emerald-500 mt-1"/>}
+                        <img src={INGREDIENT_DATA[station.content.id].image} className="w-24 h-24 object-contain" />
+                        {station.content.state === IngredientState.COOKING && <div className="w-16 h-2 bg-stone-600 rounded-full overflow-hidden mt-1"><div className="h-full bg-orange-500" style={{ width: `${station.content.progress}%` }} /></div>}
                       </div>
                     ))}
                   </div>
@@ -256,68 +291,72 @@ export default function App() {
             </div>
           </div>
 
-          {/* 重要修复：手持物品显示图标 (画面底部约 10% 位置) */}
+          {/* 核心改动：Holding Item UI (居中显示在底部操作栏上方) */}
           <AnimatePresence>
             {heldItem && (
               <motion.div 
-                initial={{ y: 50, opacity: 0, scale: 0.5 }} 
+                initial={{ y: 20, opacity: 0, scale: 0.8 }} 
                 animate={{ y: 0, opacity: 1, scale: 1 }} 
-                exit={{ y: 50, opacity: 0, scale: 0.5 }}
-                className="absolute bottom-36 left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
+                exit={{ y: 20, opacity: 0, scale: 0.8 }}
+                className="absolute bottom-[10%] left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
               >
-                <div className="bg-white/90 border-4 border-emerald-500 rounded-2xl p-3 shadow-2xl flex flex-col items-center min-w-[80px]">
-                  <span className="text-[10px] font-black text-emerald-600 uppercase mb-1 tracking-tighter">Holding</span>
-                  <div className="w-16 h-16 flex items-center justify-center relative">
+                <div className="bg-white/90 border-4 border-emerald-500 rounded-2xl p-3 shadow-2xl flex flex-col items-center min-w-[100px]">
+                  <span className="text-[10px] font-black text-emerald-600 uppercase mb-1">HOLDING</span>
+                  <div className="w-16 h-16 flex items-center justify-center">
                     {Array.isArray(heldItem) ? (
-                      <>
-                        <img src={plateImage} className="absolute inset-0 w-full h-full object-contain opacity-50" />
-                        <div className="flex flex-wrap gap-1 justify-center relative z-10">
-                          {heldItem.slice(-4).map((ing, i) => <img key={i} src={INGREDIENT_DATA[ing.id].image} className="w-6 h-6 object-contain" />)}
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        <img src={plateImage} className="absolute w-full h-full object-contain opacity-40" />
+                        <div className="flex flex-wrap gap-1 justify-center scale-75">
+                          {heldItem.map((ing, i) => <img key={i} src={INGREDIENT_DATA[ing.id].image} className="w-8 h-8 object-contain" />)}
                         </div>
-                      </>
+                      </div>
                     ) : (
-                      <img src={INGREDIENT_DATA[heldItem.id].image} className="w-full h-full object-contain" />
+                      <img src={INGREDIENT_DATA[heldItem.id].image} className="w-full h-full object-contain drop-shadow-md" />
                     )}
                   </div>
                 </div>
-                {/* 底部装饰小箭头 */}
-                <div className="w-0 h-0 border-x-[10px] border-x-transparent border-t-[10px] border-t-emerald-500 mx-auto" />
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* 底部食材箱 & 垃圾桶 */}
-          <div className="absolute inset-x-0 bottom-6 px-4 flex justify-between items-center z-50">
-            <div className="flex gap-2 overflow-x-auto max-w-[80%] pb-2 no-scrollbar">
+          {/* Bottom Ingredients */}
+          <div className="absolute left-0 right-0 bottom-4 px-2 flex justify-between items-end gap-1 z-50">
+            <div className="grid grid-cols-4 gap-1 max-w-[82%]">
               {currentLevel.unlockedIngredients.map(id => (
-                <div key={id} onClick={() => takeIngredient(id)} className="w-16 h-20 bg-white border-2 border-stone-200 rounded-xl flex flex-col items-center justify-center shadow-sm shrink-0 active:scale-95 transition-transform">
-                  <img src={INGREDIENT_DATA[id].image} className="w-10 h-10 object-contain mb-1" />
-                  <span className="text-[8px] font-bold text-stone-500 uppercase">{INGREDIENT_DATA[id].name}</span>
+                <div key={id} onClick={() => takeIngredient(id)} className="w-[64px] h-[74px] bg-white rounded-lg border border-stone-200 shadow-sm flex flex-col items-center justify-center cursor-pointer active:scale-95">
+                  <img src={INGREDIENT_DATA[id].image} className="w-12 h-12 object-contain mb-1" />
+                  <span className="text-[10px] font-bold text-stone-500 uppercase">{INGREDIENT_DATA[id].name}</span>
                 </div>
               ))}
             </div>
-            
-            {/* 丢弃按钮：点击清空手持 */}
-            <div 
-              onClick={() => setHeldItem(null)} 
-              className={`w-14 h-14 rounded-full flex items-center justify-center border-4 shadow-lg transition-all active:scale-90 ${heldItem ? 'bg-red-500 border-red-200 animate-pulse' : 'bg-stone-300 border-stone-100'}`}
-            >
-              <XCircle className="text-white w-8 h-8" />
+            <div onClick={() => setHeldItem(null)} className="w-14 h-14 bg-red-100 border border-red-200 rounded-full flex items-center justify-center cursor-pointer active:scale-90 shadow-md">
+              <XCircle className="w-8 h-8 text-red-500" />
             </div>
           </div>
         </main>
 
-        {/* 游戏状态 Overlay (Start, Complete, etc.) */}
+        {/* Start Overlay */}
+        {gameState === 'START' && (
+          <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-12 max-w-md w-full text-center shadow-2xl">
+              <ChefHat className="w-12 h-12 text-emerald-600 mx-auto mb-8" />
+              <h2 className="text-4xl font-bold mb-4">Kitchen Master</h2>
+              <button onClick={() => setGameState('LEVEL_SELECT')} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg">SELECT LEVEL</button>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Level Select */}
         {gameState === 'LEVEL_SELECT' && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-8">
-            <div className="bg-white rounded-3xl p-6 w-full max-h-[80vh] overflow-y-auto">
-              <h2 className="text-2xl font-bold mb-6 text-center">Select Kitchen</h2>
-              <div className="grid grid-cols-4 gap-4">
-                {LEVELS.map((level, i) => (
-                  <button key={i} onClick={() => startLevel(i)} className="aspect-square bg-stone-100 rounded-2xl font-bold text-xl hover:bg-emerald-100 border-2 border-stone-200">{level.id}</button>
+          <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-3xl p-8 max-w-4xl w-full shadow-2xl max-h-[80vh] flex flex-col">
+              <h2 className="text-3xl font-bold mb-6 text-center">Select Level</h2>
+              <div className="grid grid-cols-4 gap-4 overflow-y-auto p-2">
+                {LEVELS.map((level, idx) => (
+                  <button key={level.id} onClick={() => startLevel(idx)} className="aspect-square bg-stone-100 border-2 border-stone-200 rounded-2xl font-bold text-2xl">{level.id}</button>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
       </div>
