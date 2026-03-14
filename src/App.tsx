@@ -466,7 +466,7 @@ export default function App() {
       
       {/* Top Bar (shifted down for iPhone Dynamic Island / safe-area) */}
       <header className="bg-[#8b4f2f]/95 border-b border-[#5d2f1b] shadow-sm z-50 relative pt-[env(safe-area-inset-top)]">
-        <div className="h-14 flex items-center justify-between px-2 mt-[10%]">
+        <div className="h-14 flex items-center justify-between px-2 mt-[6%]">
         <div className="flex items-center gap-2 min-w-0">
           <ChefHat className="text-amber-100 w-5 h-5" />
           <span className="text-amber-50 font-bold text-sm truncate">{currentLevel.name}</span>

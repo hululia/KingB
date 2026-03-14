@@ -15,7 +15,7 @@ export default function BottomBar({
   plateImage: string;
 }) {
   return (
-    <div className="absolute left-0 right-0 bottom-[5%] px-2 flex justify-between items-end gap-1 z-50">
+    <div className="absolute left-0 right-0 bottom-[10%] px-2 flex justify-between items-end gap-1 z-50">
       <div className="grid grid-cols-4 gap-1 max-w-[82%]">
         {currentLevel.unlockedIngredients.map((id) => (
           <div
