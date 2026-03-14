@@ -26,10 +26,8 @@ export default function StationsArea({
           <div
             key={station.id}
             onClick={() => interactWithStation(station.id)}
-            className={`w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative ${
-              !station.id.startsWith('grill') ? 'scale-[1.08]' : ''
-            } bg-transparent hover:scale-105 active:scale-95 shadow-lg`}
-          >
+            className="w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative bg-transparent hover:scale-105 active:scale-95 shadow-lg"
+>
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-400 rounded text-[10px] font-bold text-white uppercase tracking-wider">
               {station.id.startsWith('grill')
                 ? 'GRILL'
@@ -40,9 +38,44 @@ export default function StationsArea({
                     : 'PLATE'}
             </div>
 
+            {/* Station background should ALWAYS show (visual only) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              {station.type === 'STOVE' ? (
+                <img
+                  src={station.id.startsWith('fryer') ? stationFryerImage : stationGrillImage}
+                  alt=""
+                  className="w-24 h-24 object-contain opacity-95 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = plateImage;
+                  }}
+                />
+              ) : station.type === 'PREP' ? (
+                <img
+                  src={stationSauceImage}
+                  alt=""
+                  className="w-16 h-16 object-contain opacity-95 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = plateImage;
+                  }}
+                />
+              ) : (
+                <img
+                  src={plateImage}
+                  alt="plate"
+                  className="w-16 h-16 object-contain opacity-95"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = plateImage;
+                  }}
+                />
+              )}
+            </div>
+
             {station.content && (!Array.isArray(station.content) || station.content.length > 0) ? (
               Array.isArray(station.content) ? (
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center gap-1 relative z-10">
                   {(() => {
                     const ingredients = station.content as Ingredient[];
                     const matchedRecipe = Object.values(RECIPES).find((r) => {
@@ -94,11 +127,16 @@ export default function StationsArea({
                   })()}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-2 relative z-10">
                   <div className="relative w-24 h-24 flex items-center justify-center">
                     <img
                       src={INGREDIENT_DATA[(station.content as Ingredient).id].image}
-                      className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]"
+                      className={`w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] ${
+                        (station.content as Ingredient).state === IngredientState.COOKING &&
+                        (station.content as Ingredient).id === 'meat'
+                          ? 'scale-[0.8]'
+                          : ''
+                      }`}
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = plateImage;
@@ -119,45 +157,7 @@ export default function StationsArea({
                 </div>
               )
             ) : (
-              <div className="opacity-100 flex flex-col items-center">
-                {station.type === 'STOVE' ? (
-                  <div className="relative w-24 h-24 flex items-center justify-center">
-                    <img
-                      src={station.id.startsWith('fryer') ? stationFryerImage : stationGrillImage}
-                      alt=""
-                      className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = plateImage;
-                      }}
-                    />
-                  </div>
-                ) : station.type === 'PREP' ? (
-                  <div className="relative w-16 h-16 flex items-center justify-center">
-                    <img
-                      src={stationSauceImage}
-                      alt=""
-                      className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = plateImage;
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="relative w-16 h-16 flex items-center justify-center">
-                    <img
-                      src={plateImage}
-                      alt="plate"
-                      className="w-full h-full object-contain relative z-10"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = plateImage;
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
+              <div className="relative z-10" />
             )}
           </div>
         ))}

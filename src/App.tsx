@@ -16,7 +16,8 @@ import {
   XCircle,
   ChefHat,
   Trophy,
-  ArrowRight
+  ArrowRight,
+  Info
 } from 'lucide-react';
 import { 
   IngredientId, 
@@ -45,6 +46,7 @@ import stationSauceImage from './assets/machines/station_sauce.png';
 import CustomerArea from './components/CustomerArea';
 import StationsArea from './components/StationsArea';
 import BottomBar from './components/BottomBar';
+import LevelInfoModal from './components/LevelInfoModal';
 
 const MAX_CUSTOMERS = 3;
 
@@ -68,6 +70,7 @@ export default function App() {
     { id: 'plate-1', type: 'PLATE', content: [], isCooking: false },
   ]);
   const [heldItem, setHeldItem] = useState<Ingredient | Ingredient[] | null>(null);
+  const [showLevelInfo, setShowLevelInfo] = useState(false);
 
   const currentLevel = LEVELS[currentLevelIdx];
 
@@ -463,13 +466,20 @@ export default function App() {
       
       {/* Top Bar (shifted down for iPhone Dynamic Island / safe-area) */}
       <header className="bg-[#8b4f2f]/95 border-b border-[#5d2f1b] shadow-sm z-50 relative pt-[env(safe-area-inset-top)]">
-        <div className="h-14 flex items-center justify-between px-2 mt-[3%]">
+        <div className="h-14 flex items-center justify-between px-2 mt-[5%]">
         <div className="flex items-center gap-2 min-w-0">
           <ChefHat className="text-amber-100 w-5 h-5" />
           <span className="text-amber-50 font-bold text-sm truncate">{currentLevel.name}</span>
         </div>
 
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowLevelInfo(true)}
+            className="bg-black/20 hover:bg-black/30 text-amber-50 px-2 py-1 rounded text-xs font-bold flex items-center gap-1"
+            aria-label="Level info"
+          >
+            <Info className="w-4 h-4" />
+          </button>
           <div className="bg-black/25 text-amber-50 px-2 py-1 rounded text-xs font-bold">
             ⏱ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
           </div>
@@ -560,6 +570,10 @@ export default function App() {
           <LevelSelectOverlay levels={LEVELS} onStartLevel={startLevel} />
         )}
       </Suspense>
+
+      {showLevelInfo && (
+        <LevelInfoModal level={currentLevel} onClose={() => setShowLevelInfo(false)} />
+      )}
 
       {gameState === 'LEVEL_COMPLETE' && (
         <div className="fixed inset-0 bg-stone-900/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
