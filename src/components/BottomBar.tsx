@@ -21,13 +21,13 @@ export default function BottomBar({
           <div
             key={id}
             onClick={() => takeIngredient(id)}
-            className="w-[64px] h-[74px] bg-transparent rounded-lg border border-transparent shadow-none flex flex-col items-center justify-center cursor-pointer"
+            className="w-[64px] h-[74px] bg-white/40 rounded-lg border border-white/30 shadow-sm flex flex-col items-center justify-center cursor-pointer"
           >
             <div className="relative w-12 h-12 flex items-center justify-center mb-1">
               <img
                 src={INGREDIENT_DATA[id].image}
                 alt=""
-                className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] scale-[0.7]"
+                className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] scale-[1.2]"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = plateImage;
