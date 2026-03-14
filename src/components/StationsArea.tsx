@@ -133,7 +133,7 @@ export default function StationsArea({
                       src={INGREDIENT_DATA[(station.content as Ingredient).id].image}
                       className={`w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] ${
                         (station.content as Ingredient).state === IngredientState.COOKING &&
-                        (station.content as Ingredient).id === 'meat'
+                        ((station.content as Ingredient).id === 'meat' || (station.content as Ingredient).id === 'tomato')
                           ? 'scale-[0.8]'
                           : ''
                       }`}

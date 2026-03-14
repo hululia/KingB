@@ -1,33 +1,32 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import type { LevelConfig, IngredientId } from '../types';
-import { RECIPES } from '../types';
+import { RECIPES, INGREDIENT_DATA } from '../types';
 
-const ING_EMOJI: Record<IngredientId, string> = {
-  meat: '🥩',
-  tomato: '🍅',
-  bread: '🍞',
-  lettuce: '🥬',
-  cheese: '🧀',
-  onion: '🧅',
-  pickles: '🥒',
-  egg: '🍳',
-};
-
-const RECIPE_EMOJI: Record<string, string> = {
-  burger: '🍔',
-  cheeseburger: '🍔',
-  deluxe_burger: '🍔',
-  salad: '🥗',
-  egg_sandwich: '🥪',
-};
-
-function recipeLine(recipeId: string) {
+function RecipeLine({ recipeId }: { recipeId: string }) {
   const r = RECIPES[recipeId];
-  if (!r) return `${recipeId}`;
-  const left = r.ingredients.map((id) => ING_EMOJI[id]).join(' + ');
-  const right = RECIPE_EMOJI[recipeId] ?? '🍽️';
-  return `${left} = ${right}  ${r.name}`;
+  if (!r) return <div className="font-bold">{recipeId}</div>;
+
+  const outImg = r.image;
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      {r.ingredients.map((id: IngredientId, idx: number) => (
+        <React.Fragment key={`${id}-${idx}`}>
+          <img
+            src={INGREDIENT_DATA[id].image}
+            alt={id}
+            className="w-7 h-7 object-contain"
+            referrerPolicy="no-referrer"
+          />
+          {idx < r.ingredients.length - 1 && <span className="font-black text-stone-700">+</span>}
+        </React.Fragment>
+      ))}
+      <span className="font-black text-stone-700">=</span>
+      <img src={outImg} alt={r.name} className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
+      <span className="font-bold text-stone-800">{r.name}</span>
+    </div>
+  );
 }
 
 export default function LevelInfoModal({
@@ -51,8 +50,8 @@ export default function LevelInfoModal({
           <div className="text-xs text-stone-500 mb-3">点右上角 ⓘ 可随时查看本关可做菜谱</div>
           <div className="space-y-2">
             {level.availableRecipes.map((rid) => (
-              <div key={rid} className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 font-bold text-stone-800">
-                {recipeLine(rid)}
+              <div key={rid} className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
+                <RecipeLine recipeId={rid} />
               </div>
             ))}
           </div>

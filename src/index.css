@@ -20,7 +20,7 @@
     align-items: center;
   }
 
-  /* iPhone 14/15 Pro portrait reference size */
+  /* Default: iPhone portrait reference size (nice framed look on desktop) */
   #root {
     width: min(430px, 100vw);
     height: min(932px, 100vh);
@@ -30,6 +30,24 @@
     border-radius: 28px;
     box-shadow: 0 18px 48px rgba(0,0,0,0.18);
     background: #000;
+  }
+
+  /* Mobile Safari: true fullscreen */
+  @media (max-width: 500px) {
+    body {
+      display: block;
+      justify-content: initial;
+      align-items: initial;
+    }
+
+    #root {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
   }
 }
 
