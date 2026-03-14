@@ -3,3 +3,8 @@ dist
 .vercel
 .DS_Store
 .env
+
+# local screenshots / scripts
+*.png
+*take_screenshot*.mjs
+*take_level1*.mjs

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { motion } from 'motion/react';
 import { 
   Timer, 
   Coins, 
@@ -13,7 +13,6 @@ import {
   RotateCcw, 
   Flame, 
   Utensils, 
-  CheckCircle2, 
   XCircle,
   ChefHat,
   Trophy,
@@ -43,7 +42,15 @@ import stationFryerImage from './assets/machines/station_grill.png'; // 假设 f
 import stationGrillImage from './assets/machines/station_grill.png'; // 假设 grill 在 machines 文件夹，如果不是请调整
 import stationSauceImage from './assets/machines/station_sauce.png';
 
+import CustomerArea from './components/CustomerArea';
+import StationsArea from './components/StationsArea';
+import BottomBar from './components/BottomBar';
+
 const MAX_CUSTOMERS = 3;
+
+const StartOverlay = lazy(() => import('./components/StartOverlay'));
+const LevelSelectOverlay = lazy(() => import('./components/LevelSelectOverlay'));
+
 
 export default function App() {
   // Game State
@@ -454,8 +461,9 @@ export default function App() {
         onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
       />
       
-      {/* Top Bar */}
-      <header className="h-14 bg-[#8b4f2f]/95 border-b border-[#5d2f1b] flex items-center justify-between px-2 shadow-sm z-50 relative">
+      {/* Top Bar (shifted down for iPhone Dynamic Island / safe-area) */}
+      <header className="bg-[#8b4f2f]/95 border-b border-[#5d2f1b] shadow-sm z-50 relative pt-[env(safe-area-inset-top)]">
+        <div className="h-14 flex items-center justify-between px-2">
         <div className="flex items-center gap-2 min-w-0">
           <ChefHat className="text-amber-100 w-5 h-5" />
           <span className="text-amber-50 font-bold text-sm truncate">{currentLevel.name}</span>
@@ -472,70 +480,17 @@ export default function App() {
             🎯 {currentLevel.id === 21 ? '∞' : currentLevel.targetScore}
           </div>
         </div>
+        </div>
       </header>
 
 {/* Main Game Area: 改为 relative 容器，去掉所有 flex 约束 */}
       <main className="h-[calc(100vh-56px)] relative z-0 overflow-hidden">
         
-        {/* 1. Customer Area (z-10, 桌子后方) - bottom: 40% */}
-        <div className="absolute left-0 right-0 bottom-[50%] h-[220px] flex justify-between px-4 items-end z-10 pointer-events-none">
-          {[0, 1, 2].map(slot => {
-            const customer = customers.find(c => c.slotIndex === slot);
-            return (
-              <div key={slot} className="w-[122px] flex flex-col items-center justify-end relative">
-                <AnimatePresence>
-                  {customer && (
-                    <motion.div
-                      initial={{ y: 50, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: 50, opacity: 0 }}
-                      className="flex flex-col items-center pointer-events-auto"
-                      onClick={() => serveCustomer(slot)}
-                    >
-                      {/* Bubble (z-40, 最顶层) - bottom: 78% (相对于容器) */}
-                      {/* 这里通过 absolute 定位确保它脱离 customer 容器显示在最上方 */}
-                      <div className="absolute bottom-[79%] left-1/2 -translate-x-1/2 z-40 mb-4">
-                        <div className="order-bubble scale-90">
-                          <div className="flex flex-col items-center gap-1">
-                            <div className="relative w-10 h-10 flex items-center justify-center">
-                              <img 
-                                src={RECIPES[customer.order!.recipeId].image} 
-                                alt=""
-                                className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                              />
-                            </div>
-                            <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                              <motion.div 
-                                className={`h-full ${customer.patience > 50 ? 'bg-emerald-500' : customer.patience > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
-                                animate={{ width: `${customer.patience}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+        {/* 1. Customer Area */}
+        <CustomerArea customers={customers} serveCustomer={serveCustomer} plateImage={plateImage} />
 
-                      {/* Customer Avatar */}
-                      <div className="w-[190px] h-[190px] relative flex items-end justify-center overflow-visible">
-                        <img 
-                          src={customer.image} 
-                          alt="Customer" 
-                          className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* 2. Table (z-20, 中间层) - bottom: 20% */}
-        <div className="absolute left-0 right-0 bottom-[0%] z-20 flex justify-center pointer-events-none">
+        {/* 2. Table (z-20, 中间层) */}
+        <div className="absolute left-0 right-0 bottom-[10%] z-20 flex justify-center pointer-events-none">
           <img 
             src={counterWoodImage} 
             alt="table" 
@@ -545,213 +500,66 @@ export default function App() {
           />
         </div>
 
-        {/* 3. Stations (z-30, 操作层) - bottom: 25% */}
-        <div className="absolute left-0 right-0 bottom-[25%] px-2 z-30">
-          <div className="grid grid-cols-4 gap-1 relative">
-            {stations.map(station => (
-              <div 
-                key={station.id}
-                onClick={() => interactWithStation(station.id)}
-                className={`w-full h-[118px] rounded-xl border-0 flex flex-col items-center justify-center cursor-pointer transition-all relative ${!station.id.startsWith("grill") ? "scale-[1.08]" : ""} bg-transparent hover:scale-105 active:scale-95 shadow-lg`}
-              >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-400 rounded text-[10px] font-bold text-white uppercase tracking-wider">
-                  {station.id.startsWith("grill") ? "GRILL" : station.id.startsWith("fryer") ? "FRYER" : station.id.startsWith("prep") ? "PREP" : "PLATE"}
-                </div>
+        {/* 3. Stations */}
+        <StationsArea
+          stations={stations}
+          interactWithStation={interactWithStation}
+          plateImage={plateImage}
+          stationFryerImage={stationFryerImage}
+          stationGrillImage={stationGrillImage}
+          stationSauceImage={stationSauceImage}
+        />
 
-                {station.content && (!Array.isArray(station.content) || station.content.length > 0) ? (
-                  Array.isArray(station.content) ? (
-                    <div className="flex flex-col items-center gap-1">
-                      {(() => {
-                        const ingredients = station.content as Ingredient[];
-                        const matchedRecipe = Object.values(RECIPES).find(r => {
-                          const heldIds = ingredients.map(i => i.id).sort();
-                          const reqIds = [...r.ingredients].sort();
-                          const isIdsMatch = JSON.stringify(heldIds) === JSON.stringify(reqIds);
-                          const isAllCooked = ingredients.every(ing => 
-                            INGREDIENT_DATA[ing.id].cookTime === 0 || ing.state === IngredientState.COOKED
-                          );
-                          return isIdsMatch && isAllCooked;
-                        });
-
-                        if (matchedRecipe) {
-                          return (
-                            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex flex-col items-center">
-                              <div className="relative w-24 h-24 flex items-center justify-center">
-                                <img 
-                                  src={matchedRecipe.image} 
-                                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]" 
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                                />
-                              </div>
-                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">READY</span>
-                            </motion.div>
-                          );
-                        }
-
-                        return (
-                          <div className="flex flex-wrap gap-1 justify-center p-2">
-                            {ingredients.map((ing, i) => (
-                              <div key={i} className="relative w-8 h-8 flex items-center justify-center">
-                                <img 
-                                  src={INGREDIENT_DATA[ing.id].image} 
-                                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]" 
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="relative w-24 h-24 flex items-center justify-center">
-                        <img 
-                          src={INGREDIENT_DATA[(station.content as Ingredient).id].image} 
-                          className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]" 
+        {/* Holding Item HUD (only UI; does not change game logic) */}
+        {heldItem && (
+          <div className="absolute right-3 bottom-24 z-50 pixel-hold-panel">
+            <div className="pixel-hold-title">HOLD</div>
+            <div className="pixel-hold-items">
+              {(() => {
+                const items = Array.isArray(heldItem) ? heldItem : [heldItem];
+                const show = items.slice(0, 5);
+                return (
+                  <>
+                    {show.map((ing, idx) => (
+                      <div key={idx} className="pixel-hold-item">
+                        <img
+                          src={INGREDIENT_DATA[ing.id].image}
+                          alt={ing.name}
+                          className="w-full h-full object-contain"
                           referrerPolicy="no-referrer"
                           onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
                         />
                       </div>
-                      {(station.content as Ingredient).state === IngredientState.COOKING && (
-                        <div className="w-16 h-2 bg-stone-600 rounded-full overflow-hidden">
-                          <div className="h-full bg-orange-500" style={{ width: `${(station.content as Ingredient).progress}%` }} />
-                        </div>
-                      )}
-                      {(station.content as Ingredient).state === IngredientState.COOKED && (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                      )}
-                    </div>
-                  )
-                ) : (
-                  <div className="opacity-100 flex flex-col items-center">
-                    {station.type === 'STOVE' ? (
-                      <div className="relative w-24 h-24 flex items-center justify-center">
-                        <img 
-                          src={station.id.startsWith("fryer") ? stationFryerImage : stationGrillImage} 
-                          alt="" 
-                          className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]" 
-                          referrerPolicy="no-referrer" 
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                        />
-                      </div>
-                    ) : station.type === 'PREP' ? (
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        <img 
-                          src={stationSauceImage} 
-                          alt="" 
-                          className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]" 
-                          referrerPolicy="no-referrer" 
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }} 
-                        />
-                      </div>
-                    ) : (
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        <img 
-                          src={plateImage} 
-                          alt="plate" 
-                          className="w-full h-full object-contain relative z-10" 
-                          referrerPolicy="no-referrer" 
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                        />
-                      </div>
+                    ))}
+                    {items.length > show.length && (
+                      <div className="pixel-hold-more">+{items.length - show.length}</div>
                     )}
-                  </div>
-                )}
-              </div>
-            ))}
+                  </>
+                );
+              })()}
+            </div>
+            <div className="pixel-hold-hint">点右下角红色按钮可丢弃</div>
           </div>
-        </div>
+        )}
 
-        {/* 4. Bottom Ingredients Area (留在底部) */}
-        <div className="absolute left-0 right-0 bottom-4 px-2 flex justify-between items-end gap-1 z-50">
-          <div className="grid grid-cols-4 gap-1 max-w-[82%]">
-            {currentLevel.unlockedIngredients.map(id => (
-              <div 
-                key={id}
-                onClick={() => takeIngredient(id)}
-                className="w-[64px] h-[74px] bg-white/92 rounded-lg border border-stone-200 shadow-sm flex flex-col items-center justify-center cursor-pointer"
-              >
-                <div className="relative w-12 h-12 flex items-center justify-center mb-1">
-                  <img 
-                    src={INGREDIENT_DATA[id].image} 
-                    alt="" 
-                    className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = plateImage; }}
-                  />
-                </div>
-                <span className="text-[10px] font-bold text-stone-500 uppercase">{INGREDIENT_DATA[id].name}</span>
-              </div>
-            ))}
-          </div>
-
-          <div 
-            onClick={trashHeldItem}
-            className="w-14 h-14 bg-red-100 border border-red-200 rounded-full flex items-center justify-center cursor-pointer"
-          >
-            <XCircle className="w-8 h-8 text-red-500" />
-          </div>
-        </div>
+        {/* 4. Bottom Ingredients Area */}
+        <BottomBar currentLevel={currentLevel} takeIngredient={takeIngredient} trashHeldItem={trashHeldItem} plateImage={plateImage} />
 
       </main>
 
 
     </div>
 
-      {/* Overlays */}
-      {gameState === 'START' && (
-        <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl p-12 max-w-md w-full text-center shadow-2xl"
-          >
-            <div className="w-24 h-24 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-8">
-              <ChefHat className="w-12 h-12 text-emerald-600" />
-            </div>
-            <h2 className="font-display text-4xl font-bold mb-4">Kitchen Master</h2>
-            <p className="text-stone-500 mb-8 leading-relaxed">
-              Manage 20 challenging levels! Cook, assemble, and serve to become the ultimate chef.
-            </p>
-            <button 
-              onClick={() => setGameState('LEVEL_SELECT')}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              <Play className="w-5 h-5 fill-current" />
-              SELECT LEVEL
-            </button>
-          </motion.div>
-        </div>
-      )}
+      {/* Overlays (lazy-loaded for faster initial load on mobile Safari) */}
+      <Suspense fallback={null}>
+        {gameState === 'START' && (
+          <StartOverlay onSelectLevel={() => setGameState('LEVEL_SELECT')} />
+        )}
 
-      {gameState === 'LEVEL_SELECT' && (
-        <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
-          <motion.div 
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-white rounded-3xl p-8 max-w-4xl w-full shadow-2xl max-h-[80vh] flex flex-col"
-          >
-            <h2 className="font-display text-3xl font-bold mb-6 text-center">Select Level</h2>
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-4 overflow-y-auto p-2">
-              {LEVELS.map((level, idx) => (
-                <button
-                  key={level.id}
-                  onClick={() => startLevel(idx)}
-                  className="aspect-square bg-stone-100 hover:bg-emerald-100 border-2 border-stone-200 hover:border-emerald-300 rounded-2xl flex flex-col items-center justify-center transition-all group"
-                >
-                  <span className="text-2xl font-display font-bold text-stone-700 group-hover:text-emerald-700">{level.id}</span>
-                  <span className="text-[8px] font-bold text-stone-400 uppercase">
-                    {level.id === 21 ? 'Endless Mode' : `Target: ${level.targetScore}`}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      )}
+        {gameState === 'LEVEL_SELECT' && (
+          <LevelSelectOverlay levels={LEVELS} onStartLevel={startLevel} />
+        )}
+      </Suspense>
 
       {gameState === 'LEVEL_COMPLETE' && (
         <div className="fixed inset-0 bg-stone-900/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
