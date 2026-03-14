@@ -21,7 +21,7 @@ export default function BottomBar({
           <div
             key={id}
             onClick={() => takeIngredient(id)}
-            className="w-[64px] h-[74px] bg-white/92 rounded-lg border border-stone-200 shadow-sm flex flex-col items-center justify-center cursor-pointer"
+            className="w-[64px] h-[74px] bg-transparent rounded-lg border border-transparent shadow-none flex flex-col items-center justify-center cursor-pointer"
           >
             <div className="relative w-12 h-12 flex items-center justify-center mb-1">
               <img
@@ -34,7 +34,7 @@ export default function BottomBar({
                 }}
               />
             </div>
-            <span className="text-[10px] font-bold text-stone-500 uppercase">{INGREDIENT_DATA[id].name}</span>
+
           </div>
         ))}
       </div>
