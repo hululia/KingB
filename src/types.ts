@@ -169,7 +169,9 @@ export const LEVELS: LevelConfig[] = [
     return {
       id: levelNum,
       name: `Level ${levelNum}`,
-      duration: Math.round(Math.max(120, 180 - (levelNum * 2)) * 1.2),
+      duration: Math.round(
+        Math.max(120, 180 - (levelNum * 2)) * 1.2 * (levelNum >= 2 && levelNum <= 20 ? 1.4 : 1),
+      ),
       targetScore: 200 + (levelNum * 100),
       availableRecipes: levelNum < 3 ? ['burger'] : 
                        levelNum < 6 ? ['burger', 'salad'] : 
