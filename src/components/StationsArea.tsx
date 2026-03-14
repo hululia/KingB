@@ -54,7 +54,7 @@ export default function StationsArea({
                 <img
                   src={stationSauceImage}
                   alt=""
-                  className="w-16 h-16 object-contain opacity-95 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)]"
+                  className="w-16 h-16 object-contain opacity-95 drop-shadow-[0_4px_3px_rgba(0,0,0,0.3)] scale-[1.2]"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = plateImage;
@@ -64,7 +64,7 @@ export default function StationsArea({
                 <img
                   src={plateImage}
                   alt="plate"
-                  className="w-16 h-16 object-contain opacity-95"
+                  className="w-16 h-16 object-contain opacity-95 scale-[1.2]"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = plateImage;
