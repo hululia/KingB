@@ -24,13 +24,13 @@ export default function BottomBar({
               e.preventDefault();
               takeIngredient(id);
             }}
-            className="w-[64px] h-[74px] bg-white/40 rounded-lg border border-white/30 shadow-sm flex flex-col items-center justify-center cursor-pointer touch-manipulation"
+            className="w-[52px] h-[60px] bg-white/40 rounded-md border border-white/30 shadow-sm flex flex-col items-center justify-center cursor-pointer touch-manipulation"
           >
             <div className="relative w-12 h-12 flex items-center justify-center mb-1">
               <img
                 src={INGREDIENT_DATA[id].image}
                 alt=""
-                className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] scale-[0.98]"
+                className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] scale-[0.78]"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = plateImage;
