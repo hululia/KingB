@@ -9,6 +9,7 @@
 
 // Ingredients (食材)
 import imgMeat from './assets/ingredients/meat.png';
+import imgRawMeat from './assets/ingredients/rawmeat.png';
 import imgTomato from './assets/ingredients/tomato.png';
 import imgBread from './assets/ingredients/bread.png';
 import imgLettuce from './assets/ingredients/lettuce.png';
@@ -96,7 +97,7 @@ export interface LevelConfig {
 }
 
 export const INGREDIENT_DATA: Record<IngredientId, { name: string; cookTime: number; image: string }> = {
-  'meat': { name: 'Meat', cookTime: 5, image: imgMeat },
+  'meat': { name: 'Meat', cookTime: 5, image: imgRawMeat },
   'tomato': { name: 'Tomato', cookTime: 2, image: imgTomato },
   'bread': { name: 'Bread', cookTime: 0, image: imgBread },
   'lettuce': { name: 'Lettuce', cookTime: 0, image: imgLettuce },

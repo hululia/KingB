@@ -4,6 +4,9 @@ import { CheckCircle2 } from 'lucide-react';
 import type { Station, Ingredient } from '../types';
 import { RECIPES, INGREDIENT_DATA, IngredientState } from '../types';
 
+import cookedMeatImage from '../assets/ingredients/meat.png';
+import rawMeatImage from '../assets/ingredients/rawmeat.png';
+
 export default function StationsArea({
   stations,
   interactWithStation,
@@ -113,7 +116,13 @@ export default function StationsArea({
                         {ingredients.map((ing, i) => (
                           <div key={i} className="relative w-8 h-8 flex items-center justify-center">
                             <img
-                              src={INGREDIENT_DATA[ing.id].image}
+                              src={
+                                ing.id === 'meat'
+                                  ? ing.state === IngredientState.COOKED
+                                    ? cookedMeatImage
+                                    : rawMeatImage
+                                  : INGREDIENT_DATA[ing.id].image
+                              }
                               className="w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)]"
                               referrerPolicy="no-referrer"
                               onError={(e) => {
@@ -130,15 +139,25 @@ export default function StationsArea({
                 <div className="flex flex-col items-center gap-2 relative z-10">
                   <div className="relative w-24 h-24 flex items-center justify-center">
                     <img
-                      src={INGREDIENT_DATA[(station.content as Ingredient).id].image}
+                      src={(() => {
+                        const ing = station.content as Ingredient;
+                        if (ing.id === 'meat') {
+                          // raw + cooking use rawmeat, cooked uses meat
+                          return ing.state === IngredientState.COOKED ? cookedMeatImage : rawMeatImage;
+                        }
+                        return INGREDIENT_DATA[ing.id].image;
+                      })()}
                       className={`w-full h-full object-contain relative z-10 drop-shadow-[0_6px_6px_rgba(0,0,0,0.28)] ${
                         (station.content as Ingredient).state === IngredientState.COOKING &&
                         (station.content as Ingredient).id === 'meat'
-                          ? 'scale-[0.8]'
+                          ? 'scale-[0.5]'
                           : (station.content as Ingredient).state === IngredientState.COOKING &&
                               (station.content as Ingredient).id === 'tomato'
                             ? 'scale-[0.5]'
-                            : ''
+                            : (station.content as Ingredient).state === IngredientState.COOKED &&
+                                (station.content as Ingredient).id === 'meat'
+                              ? 'scale-[0.8]'
+                              : ''
                       }`}
                       referrerPolicy="no-referrer"
                       onError={(e) => {
