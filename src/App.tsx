@@ -72,6 +72,89 @@ export default function App() {
   const [heldItem, setHeldItem] = useState<Ingredient | Ingredient[] | null>(null);
   const [showLevelInfo, setShowLevelInfo] = useState(false);
 
+  // ==========================================
+  // SFX (best-effort, generated via WebAudio)
+  // ==========================================
+  const audioCtxRef = React.useRef<AudioContext | null>(null);
+  const prevStationsRef = React.useRef<Station[] | null>(null);
+  const angryPlayedRef = React.useRef<Set<string>>(new Set());
+
+  const getAudioCtx = async () => {
+    if (!audioCtxRef.current) {
+      // @ts-ignore - Safari legacy
+      const AC = window.AudioContext || (window as any).webkitAudioContext;
+      audioCtxRef.current = new AC();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      try { await audioCtxRef.current.resume(); } catch {}
+    }
+    return audioCtxRef.current;
+  };
+
+  const playNoiseBurst = async (duration = 0.18, gain = 0.18, highpass = 700) => {
+    const ctx = await getAudioCtx();
+    const sampleRate = ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = highpass;
+
+    const g = ctx.createGain();
+    g.gain.value = gain;
+
+    src.connect(hp);
+    hp.connect(g);
+    g.connect(ctx.destination);
+
+    src.start();
+    src.stop(ctx.currentTime + duration);
+  };
+
+  const playTone = async (freq = 440, duration = 0.12, gain = 0.08, type: OscillatorType = 'sine') => {
+    const ctx = await getAudioCtx();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(gain, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+    osc.connect(g);
+    g.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + duration + 0.02);
+  };
+
+  const sfx = {
+    grillSizzle: async () => {
+      // short sizzling burst
+      await playNoiseBurst(0.12, 0.14, 900);
+    },
+    burnt: async () => {
+      // "oops" sound: descending tone + smoky noise
+      await playTone(520, 0.08, 0.09, 'square');
+      await playTone(220, 0.16, 0.07, 'sawtooth');
+      await playNoiseBurst(0.22, 0.12, 400);
+    },
+    angry: async () => {
+      // cartoon anger: two quick tones
+      await playTone(330, 0.10, 0.10, 'square');
+      await playTone(196, 0.14, 0.10, 'square');
+    },
+  };
+
   const currentLevel = LEVELS[currentLevelIdx];
 
   // Initialize Game
@@ -110,22 +193,49 @@ export default function App() {
       });
 
       // 2. Update Cooking & Prep Stations
+      // - Cooking: progresses to COOKED
+      // - Holding on heat: if left on STOVE for > 50s after cooked -> BURNT
       setStations(prev => prev.map(station => {
         if ((station.type === 'STOVE' || station.type === 'PREP') && station.content && !Array.isArray(station.content)) {
           const ingredient = station.content as Ingredient;
+
+          // Cooking / Prep in progress
           if (ingredient.state === IngredientState.COOKING) {
-            const cookTime = INGREDIENT_DATA[ingredient.id].cookTime;
-            const newProgress = ingredient.progress + (100 / (cookTime * 10)); // 10 ticks per second
-            
-            if (newProgress >= 100) {
+            const cookTime = Math.max(0.1, INGREDIENT_DATA[ingredient.id].cookTime);
+            const cookElapsed = (ingredient.cookElapsed ?? 0) + 0.1;
+            const newProgress = Math.min(100, (cookElapsed / cookTime) * 100);
+
+            if (cookElapsed >= cookTime) {
               return {
                 ...station,
-                content: { ...ingredient, state: IngredientState.COOKED, progress: 100 }
+                content: {
+                  ...ingredient,
+                  state: IngredientState.COOKED,
+                  progress: 100,
+                  cookElapsed,
+                  holdElapsed: 0,
+                },
+              };
+            }
+
+            return {
+              ...station,
+              content: { ...ingredient, cookElapsed, progress: newProgress },
+            };
+          }
+
+          // Burn timer: only for STOVE items, only after cooked
+          if (station.type === 'STOVE' && ingredient.state === IngredientState.COOKED) {
+            const holdElapsed = (ingredient.holdElapsed ?? 0) + 0.1;
+            if (holdElapsed >= 50) {
+              return {
+                ...station,
+                content: { ...ingredient, state: IngredientState.BURNT, holdElapsed, progress: 100 },
               };
             }
             return {
               ...station,
-              content: { ...ingredient, progress: newProgress }
+              content: { ...ingredient, holdElapsed },
             };
           }
         }
@@ -185,13 +295,53 @@ export default function App() {
     return () => clearInterval(interval);
   }, [gameState, coins, currentLevel]);
 
+  // ==========================================
+  // SFX triggers
+  // ==========================================
+  useEffect(() => {
+    // 1) Grill sizzle when an item enters COOKING on STOVE
+    // 2) Burnt sound when an item transitions to BURNT
+    const prev = prevStationsRef.current;
+    if (prev) {
+      for (const curSt of stations) {
+        const prevSt = prev.find(p => p.id === curSt.id);
+        if (!prevSt) continue;
+
+        const curIng = (!Array.isArray(curSt.content) && curSt.content) ? (curSt.content as Ingredient) : null;
+        const prevIng = (!Array.isArray(prevSt.content) && prevSt.content) ? (prevSt.content as Ingredient) : null;
+
+        if (curIng && (!prevIng || prevIng.state !== curIng.state)) {
+          if (curSt.type === 'STOVE' && curIng.state === IngredientState.COOKING) {
+            sfx.grillSizzle();
+          }
+          if (curIng.state === IngredientState.BURNT) {
+            sfx.burnt();
+          }
+        }
+      }
+    }
+    prevStationsRef.current = stations;
+  }, [stations]);
+
+  useEffect(() => {
+    // Angry SFX when customer patience hits 0 / order times out
+    for (const c of customers) {
+      if (!c.order && c.patience <= 0 && !angryPlayedRef.current.has(c.id)) {
+        angryPlayedRef.current.add(c.id);
+        sfx.angry();
+      }
+    }
+  }, [customers]);
+
   // Interactions
   const takeIngredient = (id: IngredientId) => {
     const newIngredient: Ingredient = {
       id,
       name: INGREDIENT_DATA[id].name,
       state: IngredientState.RAW,
-      progress: 0
+      progress: 0,
+      cookElapsed: 0,
+      holdElapsed: 0,
     };
 
     // 1. If holding a plate, add ingredient directly to it (if it's bread/cheese/lettuce/pickles - items that don't need cooking)

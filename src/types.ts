@@ -52,6 +52,10 @@ export interface Ingredient {
   name: string;
   state: IngredientState;
   progress: number; // 0 to 100
+  /** seconds elapsed while actively cooking/prepping */
+  cookElapsed?: number;
+  /** seconds elapsed after COOKED but still left on heat (burn timer) */
+  holdElapsed?: number;
 }
 
 export interface Recipe {
